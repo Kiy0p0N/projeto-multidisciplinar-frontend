@@ -3,10 +3,11 @@
 ---
 ## 🔗 Links para navegação
 - [⚠️ Objetivo](#objetivo)
-- [📕 Estudo de caso](#caso-de-estudo)
+- [📕 Caso de estudo](#caso-de-estudo)
 - [📋 Requisitos](#requisitos)
+- [🎨 Protótipos](#prototipos)
 - [👨‍💻 Autor](#autor)
-- [📄 Licença](#licença)
+- [📄 Licença](#licenca)
 
 ---
 
@@ -109,6 +110,17 @@ A instituição VidaPlus administra hospitais, clínicas de bairro, laboratório
 
 ---
 
+<div id="prototipos">
+
+## 🎨 Protótipos
+
+1. ### Baixa fidelidade
+    ![Protótipo de baixa fidelidade](./image/image.png)
+
+</div>
+
+---
+
 <div id="autor">
 
 ## 👨‍💻 Autor
@@ -122,10 +134,9 @@ Contato: [LinkedIn](https://www.linkedin.com/in/felipe-cesar-rodrigues/) | [GitH
 
 --- 
 
-<div id="licença">
+<div id="licenca">
 
 ## 📄 Licença
-
 
 Licenciado sob a [MIT License](./LICENSE).
 
