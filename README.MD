@@ -114,8 +114,22 @@ A instituição VidaPlus administra hospitais, clínicas de bairro, laboratório
 
 ## 🎨 Protótipos
 
+Protótipos são versões preliminares da interface de um sistema.
+
 1. ### Baixa fidelidade
-    ![Protótipo de baixa fidelidade](./image/image.png)
+
+    Valida ideias e fluxos rapidamente.
+
+    ![Protótipo de baixa fidelidade](./image/prototipo_baixa_fidelidade.png)
+
+
+2. ### Média/alta fidelidade
+
+    Aproxima-se mais do produto final (ainda não reflete como o produto final se parecerá).
+
+    ![Protótipo de média/alta fidelidade](./image/prototipo_media_alta_fidelidade.png)
+
+    [Link para o protótipo no Figma](https://www.figma.com/design/XiryicMrJK9n9ubcwu09lS/Untitled?node-id=50-2&t=OYdr396MsLzCelwq-1)
 
 </div>
 
