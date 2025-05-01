@@ -6,6 +6,8 @@
 - [📕 Caso de estudo](#caso-de-estudo)
 - [📋 Requisitos](#requisitos)
 - [🎨 Protótipos](#prototipos)
+- [🤖 Tecnologias](#tecnologias)
+- [🏋️ Exemplo de execução](#exemplo)
 - [👨‍💻 Autor](#autor)
 - [📄 Licença](#licenca)
 
@@ -127,9 +129,35 @@ Protótipos são versões preliminares da interface de um sistema.
 
     Aproxima-se mais do produto final (ainda não reflete como o produto final se parecerá).
 
+    
+    [Link para o protótipo no Figma](https://www.figma.com/design/XiryicMrJK9n9ubcwu09lS/Untitled?node-id=50-2&t=OYdr396MsLzCelwq-1)
+
     ![Protótipo de média/alta fidelidade](./image/prototipo_media_alta_fidelidade.png)
 
-    [Link para o protótipo no Figma](https://www.figma.com/design/XiryicMrJK9n9ubcwu09lS/Untitled?node-id=50-2&t=OYdr396MsLzCelwq-1)
+
+</div>
+
+---
+
+<div id="tecnologias">
+
+## 🤖 Tecnologias
+
+1. ### Frontend
+    - React
+    - Material ui
+    - Tailwindcss
+
+2. ### Backend
+
+</div>
+
+---
+
+<div id="exemplo">
+
+## 🏋️ Exemplo de execução
+![Exemplo de execução](./image/exemplo-execucao.gif)
 
 </div>
 
