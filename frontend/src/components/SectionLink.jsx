@@ -1,4 +1,4 @@
-function Link(props) {
+function SectionLink(props) {
     return (
         <a href={props.href}
             className="text-lg font-medium font-sans text-white duration-200 hover:text-blue-400"
@@ -8,4 +8,4 @@ function Link(props) {
     );
 }
 
-export default Link;
+export default SectionLink;

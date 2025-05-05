@@ -1,6 +1,4 @@
 /* Componentes */
-import Logo from "../components/Logo";
-import Link from "../components/Link";
 import Card from "../components/Card";
 
 /* Material ui */
@@ -13,23 +11,11 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 /* Imagem */
 import Doctor from "../assets/image/medica.png";
 
+import { Link } from "react-router-dom";
+
 function Home() {
     return (
         <div className="w-full min-h-dvh flex flex-col">
-            {/* Navbar */}
-            <header className="w-full h-20 bg-blue-200 flex fixed items-center justify-between pr-5 pl-5 z-50">
-                
-                <Logo />
-
-                <nav className="flex gap-4">
-                    <Link href="#hero" text="Início" />
-                    <Link href="#services" text="Serviços" />
-                    <Link href="#about" text="Sobre" />
-                </nav>
-
-                <Button variant="contained">Acessar</Button>
-            </header>
-
             <main className="flex flex-col w-full h-full">
                 {/* Seção hero/inicial */}
                 <section id="hero">
@@ -40,13 +26,17 @@ function Home() {
                             <p className="text-white text-2xl font-semibold">Aqui cuidamos do que mais importa</p>
                             <h1 className="text-green-300 text-9xl font-extrabold">SUA SAÚDE</h1>
 
-                            <Button variant="contained" className="w-24">Saiba <AddIcon /></Button>
+                            <Link to="/login">
+                                <Button variant="contained" className="w-24">
+                                    Saiba <AddIcon />
+                                </Button>
+                            </Link>
                         </div>
 
                         <img src={Doctor} alt="Médica" className="absolute bottom-0 right-8 z-10 drop-shadow-lg drop-shadow-black" />
 
                         {/* Cria um triângulo atrás da imagem */}
-                        <div class="absolute right-0 top-0 
+                        <div className="absolute right-0 top-0 
                                     w-0 h-0 
                                     border-t-[100vh] border-t-transparent 
                                     border-b-[0] border-b-transparent 
@@ -121,10 +111,6 @@ function Home() {
                     </div>
                 </section>
             </main>
-
-            <footer className="w-full h-20 flex items-center pl-5 pr-5 border-t-1">
-                <p>&copy; VidaPlus. {new Date().getFullYear()}</p>
-            </footer>
         </div>
     )
 }
