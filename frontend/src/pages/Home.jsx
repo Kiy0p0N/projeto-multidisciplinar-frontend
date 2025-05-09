@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 
 function Home() {
     return (
-        <div className="w-full min-h-dvh flex flex-col">
+        <div className="w-full min-h-dvh">
             <main className="flex flex-col w-full h-full">
                 {/* Seção hero/inicial */}
                 <section id="hero">

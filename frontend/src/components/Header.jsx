@@ -11,6 +11,7 @@ function Header() {
 
     const isHome = location.pathname === "/";
     const isLogin = location.pathname === "/login";
+    const isRegister = location.pathname === "/register"
 
     return (
         <header className="w-full h-20 bg-blue-200 flex fixed items-center justify-between pr-5 pl-5 z-50">
@@ -28,8 +29,8 @@ function Header() {
                 )}
             </nav>
 
-            {/* O botão de acesso só será exibido quando estiver na página Home ("/") */}
-            {isHome && (
+            {/* O botão de acesso só será exibido quando estiver na página Home ("/") ou Regster ("/register") */}
+            {(isHome || isRegister) && (
                 <>
                     <Link to="/login">
                         <Button variant="contained">Acessar</Button>

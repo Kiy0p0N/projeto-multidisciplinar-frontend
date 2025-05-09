@@ -1,58 +1,76 @@
-import { Button, TextField, FormControl, InputLabel, OutlinedInput, InputAdornment, IconButton } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { Button } from '@mui/material';
 import { Link } from 'react-router-dom';
+import TextInput from '../components/TextInput';
+import PasswordInput from '../components/PasswordInput';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
-    const [showPassword, setShowPassword] = useState(false);
+    const [form, setForm] = useState({
+        email: '',
+        password: ''
+    });
 
-    // Quando o ícone for clicado, troca o modo de exibição, 'text' ou 'password'
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
+    // Atualiza os campos do formulário
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setForm((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
-    const handleMouseUpPassword = (event) => {
-        event.preventDefault();
+    // Verifica se todas as condições estão preenchidas corretamente
+    const isFormValid = 
+    form.email &&
+    form.password;
+
+    
+    const navigate = useNavigate();
+
+    // Submete o formulário apenas se estiver válido
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (isFormValid) {
+            console.log('Dados do formulário:', form);
+            navigate('/user');
+        } else {
+            alert('Verifique os campos preenchidos. Certifique-se de ter mais de 18 anos e que as senhas coincidem.');
+        }
     };
 
     return (
-        <div className="w-full min-h-dvh flex flex-col">
+        <div className="w-full min-h-dvh">
 
             <main className="flex flex-col w-full h-dvh justify-center items-center">
-                <div className='w-96 h-auto p-5 flex flex-col gap-2 shadow-2xl rounded-2xl'>
+                <form onSubmit={handleSubmit} className='w-96 h-auto p-5 flex flex-col gap-2 shadow-2xl rounded-2xl'>
 
-                    {/* Email */}
-                    <TextField id="email" label="Email" variant="outlined" />
+                    {/* Campo de email */}
+                    <TextInput 
+                        htmlFor="email"
+                        label="Email"
+                        id="email"
+                        name="email"
+                        required={true}
+                        value={form.email}
+                        onChange={handleChange}
+                    />
 
-                    {/* Senha */}
-                    <FormControl className='w-full' variant="outlined">
-                        <InputLabel htmlFor="outlined-adornment-password">Senha</InputLabel>
-                        <OutlinedInput
-                            id="password"
-                            name='password'
-                            type={showPassword ? 'text' : 'password'}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        aria-label={
-                                            showPassword ? 'hide the password' : 'display the password'
-                                        }
-                                        onClick={handleClickShowPassword}
-                                        onMouseDown={handleMouseDownPassword}
-                                        onMouseUp={handleMouseUpPassword}
-                                        edge="end"
-                                        >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            }
-                            label="Senha"
-                        />
-                    </FormControl>
+                    {/* Campo de senha com visualização opcional */}
+                    <PasswordInput
+                        htmlFor="password"
+                        label="Senha"
+                        id="password"
+                        name="password"
+                        required={true}
+                        value={form.password}
+                        onChange={handleChange}
+                    />
 
-                    <Button variant="contained">Entrar</Button>
+                    {/* Botão de envio, só habilitado quando o formulário é válido */}
+                    <Button type="submit" variant="contained" className="w-full" disabled={!isFormValid}>
+                        Entrar
+                    </Button>
 
                     <hr />
                     
@@ -62,7 +80,7 @@ function Login() {
                                             Cadastre-se
                                         </Link>
                     </p>
-                </div>
+                </form>
             </main>
 
         </div>
