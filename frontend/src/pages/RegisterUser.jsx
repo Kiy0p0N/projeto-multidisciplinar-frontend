@@ -3,7 +3,7 @@ import {
     Checkbox
 } from '@mui/material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CPFInput from '../components/CPFInput';
 import TextInput from '../components/TextInput';
 import PasswordInput from '../components/PasswordInput';
@@ -66,7 +66,7 @@ function RegisterUser() {
     };
 
     return (
-        <main className="w-full min-h-dvh flex flex-col justify-center items-center py-24">
+        <main className="container justify-center items-center py-24">
             <form onSubmit={handleSubmit} className="w-96 h-auto p-5 rounded-2xl shadow-2xl flex flex-col gap-2">
                 <h1 className="text-3xl text-blue-500 font-medium text-center">Registre-se</h1>
 
@@ -155,7 +155,7 @@ function RegisterUser() {
                     <label htmlFor="termsAccepted">
                         Aceite os{' '}
                         <span className="text-blue-500 cursor-pointer hover:underline">
-                            Termos de uso
+                            <Link to="/terms">Termos de uso</Link>
                         </span>
                     </label>
                 </div>
