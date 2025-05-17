@@ -1,7 +1,7 @@
 import Cleave from 'cleave.js/react';
 
-// Componente de input para CPF com máscara formatada e estilo personalizado
-function CPFInput({ htmlFor, label, id, name, cpf, setCpf, required }) {
+
+function CPFInput({ htmlFor, label, id, name, value, required, minLength, onChange }) {
   return (
     <div className='w-full h-auto'>
       {/* Rótulo do campo com indicação visual de obrigatório, se aplicável */}
@@ -14,23 +14,26 @@ function CPFInput({ htmlFor, label, id, name, cpf, setCpf, required }) {
       <Cleave
         className="w-full p-2 rounded-[5px] border border-gray-400 
        focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        
-       options={{
+
+        options={{
           // Define a formatação do CPF: 000.000.000-00
           delimiters: ['.', '.', '-'],
           blocks: [3, 3, 3, 2],
-          numericOnly: true, // Aceita apenas números
+          numericOnly: true,
         }}
-        value={cpf}
-        onChange={(e) => setCpf(e.target.value)} // Atualiza o estado com valor formatado
+
+        value={value}
+        onChange={(e) => onChange({ target: { name, value: e.target.value } })}
+
         render={({ value, onChange }) => (
-            <input
-                id={id}
-                name={name}
-                value={value}       // Valor formatado vindo do Cleave
-                onChange={onChange} // Manipulador controlado pelo Cleave
-                required={required} // Campo obrigatório se `required` for true
-            />
+          <input
+            id={id}
+            name={name}
+            value={value}
+            onChange={onChange}
+            required={required}
+            minLength={minLength}
+          />
         )}
       />
     </div>

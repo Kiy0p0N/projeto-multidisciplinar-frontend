@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 import { Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 import TextInput from '../components/TextInput';
@@ -6,6 +8,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
+    const [error, setError] = useState('');
+
     const [form, setForm] = useState({
         email: '',
         password: ''
@@ -13,10 +17,10 @@ function Login() {
 
     // Atualiza os campos do formulário
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value } = e.target;
         setForm((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: value
         }));
     };
 
@@ -29,19 +33,34 @@ function Login() {
     const navigate = useNavigate();
 
     // Submete o formulário apenas se estiver válido
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log('Dados do formulário:', form);
-            navigate('/user');
-        } else {
-            alert('Verifique os campos preenchidos. Certifique-se de ter mais de 18 anos e que as senhas coincidem.');
+            try {
+                const response = await axios.post("http://localhost:3000/login", form);
+
+                if (response.status === 200) {
+                    console.log(response.data.message);
+                    navigate("/user");
+                }
+
+            } catch (error) {
+                if (error.response) {
+                    setError(error.response.data.message);
+                    console.warn("Erro do servidor:", error.response.data.message);
+                } else {
+                    console.error("Erro desconhecido:", error);
+                }
+            }
         }
     };
+
 
     return (
         <main className="container justify-center items-center">
             <form onSubmit={handleSubmit} className='w-96 h-auto p-5 flex flex-col gap-2 shadow-2xl rounded-2xl'>
+
+                <p className='text-center text-red-500'>{error}</p>
 
                 {/* Campo de email */}
                 <TextInput 

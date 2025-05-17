@@ -1,12 +1,14 @@
 # Projeto Multidisciplinar - Ênfase em Frontend
 
 ---
+
 ## 🔗 Links para navegação
 - [⚠️ Objetivo](#objetivo)
 - [📕 Caso de estudo](#caso-de-estudo)
 - [📋 Requisitos](#requisitos)
 - [🎨 Protótipos](#prototipos)
 - [🤖 Tecnologias](#tecnologias)
+- [🏁 O que faz](#oque-faz)
 - [🏋️ Exemplo de execução](#exemplo)
 - [👨‍💻 Autor](#autor)
 - [📄 Licença](#licenca)
@@ -149,8 +151,32 @@ Protótipos são versões preliminares da interface de um sistema.
     - React-router-dom
     - Cleave.js
     - Tailwindcss
+    - Axios
 
 2. ### Backend
+    - Express
+    - Bcrypt
+    - dotenv
+    - pg
+
+3. ### Banco de dados
+    - Postgresql
+    
+
+</div>
+
+---
+
+<div id="oque-faz">
+
+## 🏁 O que faz
+Observação: apenas localmente no momento.
+- [x] Login de usuários cadastrados
+- [x] Registro de novos usuários (pacientes)
+- [x] Informa erros, como email ou senha incorretas
+- [ ] Permite sessões
+- [ ] Registro de médicos e instituições de saúde
+- [ ] Agendamentos
 
 </div>
 

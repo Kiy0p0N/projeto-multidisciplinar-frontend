@@ -1,19 +1,17 @@
-import {
-    Button,
-    Checkbox
-} from '@mui/material';
+import axios from 'axios';
+
+import { Button, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import CPFInput from '../components/CPFInput';
 import TextInput from '../components/TextInput';
 import PasswordInput from '../components/PasswordInput';
 
 function RegisterUser() {
+    const [error, setError] = useState('');
+
     const [form, setForm] = useState({
         name: '',
         email: '',
-        cpf: '',
-        birthday: '',
         password: '',
         confirmPassword: '',
         termsAccepted: false
@@ -30,40 +28,41 @@ function RegisterUser() {
         }));
     };
 
-    // Verifica se o usuário tem ao menos 18 anos
-    const isAtLeast18 = () => {
-        const birthDate = new Date(form.birthday);
-        const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        const dayDiff = today.getDate() - birthDate.getDate();
-        return (
-            age > 18 ||
-            (age === 18 && (monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0)))
-        );
-    };
-
     // Verifica se todas as condições estão preenchidas corretamente
     const isFormValid =
         form.name &&
         form.email &&
-        form.birthday &&
-        isAtLeast18() &&
         form.password &&
         form.confirmPassword &&
         form.password === form.confirmPassword &&
         form.termsAccepted;
 
     // Submete o formulário apenas se estiver válido
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (isFormValid) {
             console.log('Dados do formulário:', form);
-            navigate('/user');
-        } else {
-            alert('Verifique os campos preenchidos. Certifique-se de ter mais de 18 anos e que as senhas coincidem.');
+
+            try {
+                const response = await axios.post("http://localhost:3000/register-user", form);
+
+                if (response.status === 200) {
+                    console.log(response.data.message);
+                    navigate("/user"); // Redireciona para a rota "/user"
+                } 
+
+            } catch (error) {
+                if (error.response) {
+                    setError(error.response.data.message);
+                    console.warn("Erro do servidor:", error.response.data.message);
+                } else {
+                    console.error("Erro desconhecido:", error);
+                }
+            }
         }
     };
+
 
     return (
         <main className="container justify-center items-center py-24">
@@ -72,6 +71,7 @@ function RegisterUser() {
 
                 <p className='text-center'>Preencha todos os campos para se registrar</p>
                 
+                <p className='text-center text-red-500'>{error}</p>
 
                 {/* Campo de nome completo */}
                 <TextInput 
@@ -92,29 +92,6 @@ function RegisterUser() {
                     name="email"
                     required={true}
                     value={form.email}
-                    onChange={handleChange}
-                />
-
-                {/* Campo de cpf */}
-                <CPFInput
-                    htmlFor="cpf"
-                    label="CPF"
-                    id="cpf"
-                    name="cpf"
-                    required={true}
-                    value={form.cpf}
-                    onChange={handleChange}
-                />
-
-                {/* Campo de data de nascimento */}
-                <TextInput 
-                    htmlFor="birthday"
-                    label="Data de Nascimento"
-                    id="birthday"
-                    name="birthday"
-                    required={true}
-                    type="date"
-                    value={form.birthday}
                     onChange={handleChange}
                 />
 
