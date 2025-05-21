@@ -42,14 +42,25 @@ function RegisterUser() {
         e.preventDefault();
 
         if (isFormValid) {
-            console.log('Dados do formulário:', form);
 
             try {
-                const response = await axios.post("http://localhost:3000/register-user", form);
+                const response = await axios.post("http://localhost:3000/register-user", 
+                    form,
+                    {
+                        withCredentials: true // Garante que o cookie de sessão seja armazenado
+                    },
+                );
 
-                if (response.status === 200) {
-                    console.log(response.data.message);
-                    navigate("/user"); // Redireciona para a rota "/user"
+                if (response.status === 201) {
+                    const user = response.data.user;
+                    console.log(user)
+                    
+                    // Redireciona com base no tipo de usuário
+                    if (user?.type === "admin" || user?.type === "doctor" || user?.type === "patient") {
+                        navigate(`/${user.type}`);
+                    } else {
+                        setError("Tipo de usuário inválido.");
+                    }
                 } 
 
             } catch (error) {

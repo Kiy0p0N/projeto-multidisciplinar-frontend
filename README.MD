@@ -174,7 +174,7 @@ Observação: apenas localmente no momento.
 - [x] Login de usuários cadastrados
 - [x] Registro de novos usuários (pacientes)
 - [x] Informa erros, como email ou senha incorretas
-- [ ] Permite sessões
+- [x] Permite sessões
 - [ ] Registro de médicos e instituições de saúde
 - [ ] Agendamentos
 

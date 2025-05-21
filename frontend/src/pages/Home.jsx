@@ -24,12 +24,6 @@ function Home() {
                         
                         <p className="text-white text-2xl font-semibold">Aqui cuidamos do que mais importa</p>
                         <h1 className="text-green-300 text-9xl font-extrabold">SUA SAÚDE</h1>
-
-                        <Link to="/login">
-                            <Button variant="contained" className="w-24">
-                                Saiba <AddIcon />
-                            </Button>
-                        </Link>
                     </div>
 
                     <img src={Doctor} alt="Médica" className="absolute bottom-0 right-8 z-10 drop-shadow-lg drop-shadow-black" />
