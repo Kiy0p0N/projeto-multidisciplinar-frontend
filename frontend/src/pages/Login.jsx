@@ -4,8 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 import { Button } from '@mui/material';
-import TextInput from '../components/TextInput';
-import PasswordInput from '../components/PasswordInput';
+import TextInput from '../components/input/TextInput';
+import PasswordInput from '../components/input/PasswordInput';
 
 function Login() {
     const [form, setForm] = useState({

@@ -2,16 +2,12 @@
 import Card from "../components/Card";
 
 /* Material ui */
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import ComputerIcon from '@mui/icons-material/Computer';
 import TimelineIcon from '@mui/icons-material/Timeline';
 
 /* Imagem */
 import Doctor from "../assets/image/medica.png";
-
-import { Link } from "react-router-dom";
 
 function Home() {
     return (

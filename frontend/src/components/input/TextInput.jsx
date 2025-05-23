@@ -1,7 +1,7 @@
 function TextInput({ htmlFor, label, id, name, type, required, placeholder, value, onChange }) {
     return (
         <div className="w-full h-auto">
-            <label htmlFor={htmlFor}>
+            <label htmlFor={htmlFor} className='font-medium'>
                 {label}{required ? "*" : ""}:
             </label>
             <input

@@ -1,24 +1,21 @@
 import Cleave from 'cleave.js/react';
 
-
-function CPFInput({ htmlFor, label, id, name, value, required, minLength, onChange }) {
+function NumbersInput({ htmlFor, label, id, name, value, required, delimiters, blocks, minLength, onChange }) {
   return (
     <div className='w-full h-auto'>
       {/* Rótulo do campo com indicação visual de obrigatório, se aplicável */}
-      <label htmlFor={htmlFor}>
+      <label htmlFor={htmlFor} className='font-medium'>
         {label}
         {required ? "*" : null}:
       </label>
 
-      {/* Input com máscara de CPF usando Cleave.js */}
       <Cleave
         className="w-full p-2 rounded-[5px] border border-gray-400 
        focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
 
         options={{
-          // Define a formatação do CPF: 000.000.000-00
-          delimiters: ['.', '.', '-'],
-          blocks: [3, 3, 3, 2],
+          delimiters: delimiters,
+          blocks: blocks,
           numericOnly: true,
         }}
 
@@ -40,4 +37,4 @@ function CPFInput({ htmlFor, label, id, name, value, required, minLength, onChan
   );
 }
 
-export default CPFInput;
+export default NumbersInput;

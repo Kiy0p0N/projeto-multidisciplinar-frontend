@@ -3,8 +3,8 @@ import axios from 'axios';
 import { Button, Checkbox } from '@mui/material';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import TextInput from '../components/TextInput';
-import PasswordInput from '../components/PasswordInput';
+import TextInput from '../components/input/TextInput';
+import PasswordInput from '../components/input/PasswordInput';
 
 function RegisterUser() {
     const [error, setError] = useState('');
@@ -30,10 +30,10 @@ function RegisterUser() {
 
     // Verifica se todas as condições estão preenchidas corretamente
     const isFormValid =
-        form.name &&
-        form.email &&
-        form.password &&
-        form.confirmPassword &&
+        form.name.trim() &&
+        form.email.trim() &&
+        form.password.trim() &&
+        form.confirmPassword.trim() &&
         form.password === form.confirmPassword &&
         form.termsAccepted;
 

@@ -20,7 +20,7 @@ function PasswordInput({
 
     return (
         <div className="w-full h-auto relative">
-            <label htmlFor={htmlFor}>
+            <label htmlFor={htmlFor} className='font-medium'>
                 {label}{required ? '*' : ''}:
             </label>
 

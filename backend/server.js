@@ -40,7 +40,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false, // Evita sessões vazias
   cookie: {
-    maxAge: 1000 * 60 * 60, // 1 hora
+    maxAge: 1000 * 60 * 60 * 24, // 1 dia
     httpOnly: true
   }
 }));
@@ -63,6 +63,23 @@ app.get("/logout", (req, res) => {
     if (err) return res.status(500).json({ message: "Erro ao sair" });
     res.status(200).json({ message: "Logout realizado com sucesso" });
   });
+});
+
+// Informações adicionais do paciente
+app.get("/patient/:id", async (req, res) => {
+  const user_id = req.params.id;
+
+  try {
+    const result = await db.query("SELECT * FROM patients WHERE user_id = $1", [user_id]);
+    const patient = result.rows[0];
+
+    if (!patient) return res.status(401).json({ message: "Informações do paciente não foram cadastradas" });
+
+    return res.status(200).json({ message: "Paciente já cadastrou suas informações", patient });
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ message: "Erro ao buscar paciente:", error })
+  }
 });
 
 // Login
@@ -109,6 +126,21 @@ app.post("/register-user", async (req, res) => {
     res.status(500).json({ message: "Erro no servidor ao registrar usuário" });
   }
 });
+
+// Informações adicionais do paciente
+app.post("/patient", async (req, res) => {
+  const {user_id, cpf, phone, gender, birth_date} = req.body;
+
+  try {
+    const response = await db.query("INSERT INTO patients (user_id, cpf, phone, gender, birth_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [user_id, cpf, phone, gender, birth_date]
+    );
+    const patient = response.rows[0];
+    return res.status(201).json({ message: "Informações cadastradas com sucesso", patient });
+  } catch (error) {
+    res.status(500).json({ message: "Erro no servidor ao adicionar informações" });
+  }
+})
 
 // Estratégia de autenticação local
 passport.use("local",
