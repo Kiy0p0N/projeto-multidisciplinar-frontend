@@ -65,6 +65,19 @@ app.get("/logout", (req, res) => {
   });
 });
 
+// Retorna todos os pacientes
+app.get("/patients", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM users WHERE type = 'patient' ORDER BY created_at DESC LIMIT 20");
+    const patients = result.rows;
+    console.log(patients)
+    return res.status(200).json({ message: "Pacientes encontrados ", patients});
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ message: "Erro ao buscar pacientes:", error });
+  }
+});
+
 // Informações adicionais do paciente
 app.get("/patient/:id", async (req, res) => {
   const user_id = req.params.id;
@@ -78,7 +91,7 @@ app.get("/patient/:id", async (req, res) => {
     return res.status(200).json({ message: "Paciente já cadastrou suas informações", patient });
   } catch (error) {
     console.error("Erro na busca:", error);
-    res.status(500).json({ message: "Erro ao buscar paciente:", error })
+    res.status(500).json({ message: "Erro ao buscar paciente:", error });
   }
 });
 

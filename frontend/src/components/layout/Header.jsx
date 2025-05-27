@@ -1,5 +1,5 @@
-import Logo from "./Logo";
-import SectionLink from "./SectionLink";
+import Logo from "../Logo";
+import SectionLink from "../SectionLink";
 
 import { Button } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
