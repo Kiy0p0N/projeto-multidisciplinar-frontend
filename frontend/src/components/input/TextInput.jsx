@@ -1,4 +1,4 @@
-function TextInput({ htmlFor, label, id, name, type, required, placeholder, value, onChange }) {
+function TextInput({ htmlFor, label, id, name, type, required, placeholder, value, maxLenght, onChange }) {
     return (
         <div className="w-full h-auto">
             <label htmlFor={htmlFor} className='font-medium'>
@@ -12,6 +12,7 @@ function TextInput({ htmlFor, label, id, name, type, required, placeholder, valu
                 required={required}
                 value={value}
                 placeholder={placeholder || ""}
+                maxLength={null || maxLenght}
                 onChange={onChange}
             />
         </div>

@@ -19,3 +19,19 @@ CREATE TABLE patients (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Tabela para informações sobre a instituição
+CREATE TABLE institutions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    cnpj VARCHAR(18) UNIQUE NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    city VARCHAR(50),
+    state VARCHAR(2),
+    zip_code VARCHAR(10),
+    image_path TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

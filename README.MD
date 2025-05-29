@@ -170,12 +170,13 @@ Protótipos são versões preliminares da interface de um sistema.
 <div id="oque-faz">
 
 ## 🏁 O que faz
-Observação: apenas localmente no momento.
+Observação: atualmente só funciona localmente.
 - [x] Login de usuários cadastrados
 - [x] Registro de novos usuários (pacientes)
 - [x] Informa erros, como email ou senha incorretas
 - [x] Permite sessões
-- [ ] Registro de médicos e instituições de saúde
+- [X] Registro de instituições de saúde
+- [ ] Registro de médicos
 - [ ] Agendamentos
 
 </div>

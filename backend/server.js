@@ -7,11 +7,34 @@ import bcrypt from 'bcrypt';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy } from 'passport-local';
+import multer from 'multer';  // Para upload de imagem
+import path from 'path';      // Para tratar caminhos de arquivo
+import fs from 'fs';          // Para verificar/criar pastas
 
 const app = express();  // Inicializa a aplicação Express
 const port = 3000;  // Porta do backend
 const saltRounds = 10;  // Fator de complexidade do bcrypt
 env.config();  // Carrega variáveis de ambiente do .env
+
+// Garante que a pasta de imagens existe
+const imageDir = 'image/institution';
+if (!fs.existsSync(imageDir)) {
+  fs.mkdirSync(imageDir, { recursive: true });
+}
+
+// Configuração do Multer para salvar imagens
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, imageDir); // Pasta onde será salva a imagem
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Nome do arquivo salvo
+  }
+});
+
+const upload = multer({ storage }); // Middleware para upload
 
 // Conexão com PostgreSQL
 const db = new pg.Client({
@@ -33,6 +56,7 @@ app.use(cors({
 }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use('/image', express.static(path.join(process.cwd(), 'image')));
 
 // Configuração da sessão
 app.use(session({
@@ -70,7 +94,6 @@ app.get("/patients", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM users WHERE type = 'patient' ORDER BY created_at DESC LIMIT 20");
     const patients = result.rows;
-    console.log(patients)
     return res.status(200).json({ message: "Pacientes encontrados ", patients});
   } catch (error) {
     console.error("Erro na busca:", error);
@@ -95,6 +118,18 @@ app.get("/patient/:id", async (req, res) => {
   }
 });
 
+// Retorna todas as instituições
+app.get("/institutions", async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM institutions ORDER BY name ASC");
+    const institutions = result.rows;
+    return res.status(200).json({ message: "Instituições encontradas ", institutions });
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ message: "Erro ao buscar as instituições:", error });
+  }
+});
+
 // Login
 app.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
@@ -114,10 +149,14 @@ app.post("/register-user", async (req, res) => {
   const { name, email, password, termsAccepted } = req.body;
 
   try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-    const existingUser = result.rows[0];
+    // Verificar se o email já está cadastrado em users ou institutions
+    const checkEmail = await db.query(`
+      SELECT 1 FROM users WHERE email = $1
+      UNION
+      SELECT 1 FROM institutions WHERE email = $1
+    `, [email]);    
 
-    if (existingUser) return res.status(409).json({ message: "Email já registrado" });
+    if (checkEmail.rows[0]) return res.status(409).json({ message: "Email já registrado" });
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -154,6 +193,48 @@ app.post("/patient", async (req, res) => {
     res.status(500).json({ message: "Erro no servidor ao adicionar informações" });
   }
 })
+
+// Registro de instituição
+app.post("/institution", upload.single('image'), async (req, res) => {
+  const { name, cnpj, email, phone, address, city, state, zip_code } = req.body;
+  const imagePath = req.file ? req.file.path.replace(/\\/g, "/") : null; // Caminho da imagem salva
+
+  console.log(imagePath)
+
+  try {
+    // Verificar se o email já está cadastrado em users ou institutions
+    const checkEmail = await db.query(`
+      SELECT 1 FROM users WHERE email = $1
+      UNION
+      SELECT 1 FROM institutions WHERE email = $1
+    `, [email]);
+
+    // Verificar se o cnpj já está cadastrado
+    const checkCNPJ = await db.query("SELECT 1 FROM institutions WHERE cnpj = $1", [cnpj]);
+
+    if (checkEmail.rows[0]) {
+      if (req.file) fs.unlinkSync(req.file.path); // remove a imagem salva
+      return res.status(401).json({ message: "Email já cadastrado" });
+    };
+
+    if (checkCNPJ.rows[0]) {
+      if (req.file) fs.unlinkSync(req.file.path); // remove a imagem salva
+      return res.status(401).json({ message: "CNPJ já cadastrado" });
+    };
+
+    // Inserir instituição no banco de dados
+    await db.query(
+      `INSERT INTO institutions (name, cnpj, email, phone, address, city, state, zip_code, image_path)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [name, cnpj, email, phone, address, city, state, zip_code, imagePath]
+    );
+
+    res.status(201).json({ message: "Instituição registrada com sucesso" });
+  } catch (error) {
+    console.error("Erro ao registrar instituição:", error);
+    return res.status(500).json({ message: "Erro no servidor", error });
+  }
+});
 
 // Estratégia de autenticação local
 passport.use("local",
