@@ -68,7 +68,7 @@ function LoginForm() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="w-96 p-6 shadow-2xl rounded-2xl flex flex-col gap-4 bg-white"
+            className="form shadow-lg"
         >
             {/* Exibição de erros, se houver */}
             {error && <p className="text-center text-red-500">{error}</p>}

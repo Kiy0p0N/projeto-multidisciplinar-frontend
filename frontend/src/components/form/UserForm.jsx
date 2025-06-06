@@ -1,5 +1,7 @@
 import TextInput from "../input/TextInput";
 import PasswordInput from "../input/PasswordInput";
+import SelectInput from "../input/SelectInput";
+import NumbersInput from "../input/NumbersInput";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
@@ -7,10 +9,14 @@ import { Button, Checkbox } from "@mui/material";
 
 function UserForm() {
     const [error, setError] = useState('');
-
     const [form, setForm] = useState({
         name: '',
         email: '',
+        cpf: '',
+        birth_date: '',
+        phone: '',
+        gender: '',
+        user_id: '',
         password: '',
         confirmPassword: '',
         termsAccepted: false
@@ -31,6 +37,10 @@ function UserForm() {
     const isFormValid =
         form.name.trim() &&
         form.email.trim() &&
+        form.cpf.trim() &&
+        form.birth_date.trim() &&
+        form.phone.trim() &&
+        form.gender.trim() &&
         form.password.trim() &&
         form.confirmPassword.trim() &&
         form.password === form.confirmPassword &&
@@ -41,27 +51,30 @@ function UserForm() {
         e.preventDefault();
 
         if (isFormValid) {
-
             try {
-                const response = await axios.post("http://localhost:3000/register-user", 
+                const registerUser = await axios.post("http://localhost:3000/register-user", 
                     form,
-                    {
-                        withCredentials: true // Garante que o cookie de sessão seja armazenado
-                    },
+                    { withCredentials: true }
                 );
 
-                if (response.status === 201) {
-                    const user = response.data.user;
-                    console.log(user)
-                    
-                    // Redireciona com base no tipo de usuário
-                    if (user?.type === "admin" || user?.type === "doctor" || user?.type === "patient") {
-                        navigate(`/${user.type}`);
-                    } else {
-                        setError("Tipo de usuário inválido.");
+                if (registerUser.status === 201) {
+                    const user = registerUser.data.user;
+                    console.log("Novo ID do usuário:", user.id);
+
+                    // Crie um novo objeto com todos os dados + user_id
+                    const patientData = {
+                        ...form,
+                        user_id: user.id
+                    };
+
+                    const registerPatient = await axios.post("http://localhost:3000/patient", patientData, {
+                        withCredentials: true
+                    });
+
+                    if (registerPatient.status === 201) {
+                        navigate("/patient");
                     }
                 } 
-
             } catch (error) {
                 if (error.response) {
                     setError(error.response.data.message);
@@ -73,10 +86,11 @@ function UserForm() {
         }
     };
 
+
     return (
         <form 
-        onSubmit={handleSubmit} 
-        className="flex flex-col gap-4 max-w-2xl max-h-96 overflow-y-auto mx-auto bg-white p-8 shadow-lg rounded-xl"
+            onSubmit={handleSubmit} 
+            className="form shadow-lg"
         >
             
             {/* Exibição de erros, se houver */}
@@ -105,6 +119,62 @@ function UserForm() {
                 onChange={handleChange}
             />
 
+            {/* Campo para informar o cpf */}
+            <NumbersInput
+                htmlFor="cpf"
+                label="CPF"
+                id="cpf"
+                name="cpf"
+                value={form.cpf}
+                delimiters={['.', '.', '-']}
+                blocks={[3, 3, 3, 2]}
+                minLength={14}
+                onChange={handleChange}
+                required
+            />
+
+            {/* Campo para informar o telefone */}
+            <NumbersInput
+                htmlFor="phone"
+                label="Telefone"
+                id="phone"
+                name="phone"
+                value={form.phone}
+                delimiters={['(', ')', ' ', ' ', '-']}
+                blocks={[0, 2, 0, 1, 4, 4]}
+                minLength={16}
+                onChange={handleChange}
+                required
+            />
+
+            {/* Campo para selecionar a data de aniversário */}
+            <TextInput
+                htmlFor="birth_date"
+                label="Data de nascimento"
+                id="birth_date"
+                name="birth_date"
+                type="date"
+                value={form.birth_date}
+                onChange={handleChange}
+                required
+            />
+
+            {/* Campo para selecionar o gênero */}
+            <SelectInput
+                htmlFor="gender"
+                label="Gênero"
+                id="gender"
+                name="gender"
+                value={form.gender}
+                onChange={handleChange}
+                required
+                options={[
+                    { value: "masculino", label: "Masculino" },
+                    { value: "feminino", label: "Feminino" },
+                    { value: "outro", label: "Outro" }
+                ]}
+            />
+
             {/* Campo de senha com visualização opcional */}
             <PasswordInput
                 htmlFor="password"
@@ -115,7 +185,6 @@ function UserForm() {
                 value={form.password}
                 onChange={handleChange}
             />
-
 
             {/* Campo para confirmar senha */}
             <PasswordInput
@@ -129,7 +198,6 @@ function UserForm() {
                 compareTo={form.password}
                 errorMessage="As senhas devem ser iguais."
             />
-
 
             {/* Checkbox dos termos de uso */}
             <div className="flex items-center">

@@ -12,4 +12,17 @@ html {
         display: flex;
         flex-direction: column;
     }
+
+    .form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-width: 672px;
+        max-height: 384px;
+        overflow-y: auto;
+        margin-inline: auto;
+        background-color: white;
+        padding: 32px;
+        border-radius: 12px;
+    }
 }

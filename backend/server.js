@@ -16,15 +16,23 @@ const port = 3000;  // Porta do backend
 const saltRounds = 10;  // Fator de complexidade do bcrypt
 env.config();  // Carrega variáveis de ambiente do .env
 
-// Garante que a pasta de imagens existe
-const imageDir = 'image/institution';
-if (!fs.existsSync(imageDir)) {
-  fs.mkdirSync(imageDir, { recursive: true });
-}
-
 // Configuração do Multer para salvar imagens
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    let folder = 'institution'; // Valor padrão
+
+    // Verifica se a url possui 'doctor'
+    if (req.originalUrl.includes("/doctor")) {
+      folder = 'doctor';
+    }
+
+    const imageDir = `image/${folder}`;
+
+    // Cria a pasta caso não exista
+    if (!fs.existsSync(imageDir)) {
+      fs.mkdirSync(imageDir, { recursive: true });
+    }
+
     cb(null, imageDir); // Pasta onde será salva a imagem
   },
   filename: function (req, file, cb) {
@@ -130,6 +138,23 @@ app.get("/institutions", async (req, res) => {
   }
 });
 
+// Retorna todos os médicos
+app.get("/doctors", async (req, res) => {
+  try {
+    const response = await db.query(`
+      SELECT users.id, users.name, users.email, doctors.specialty, doctors.image_path
+      FROM users
+      INNER JOIN doctors
+      ON users.id = doctors.user_id  
+    `);
+
+    return res.status(200).json({ message: "Médicos enconstrados", doctors: response.rows});
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ message: "Erro ao buscar os médicos:", error });
+  }
+});
+
 // Login
 app.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
@@ -146,8 +171,14 @@ app.post("/login", (req, res, next) => {
 
 // Registro de novo usuário
 app.post("/register-user", async (req, res) => {
-  const { name, email, password, termsAccepted } = req.body;
+  const { name, email, cpf, password, termsAccepted } = req.body;
 
+  let type = 'patient'; // Valor padrão
+
+  if (req.body.type === 'doctor') {
+    type = 'doctor';
+  }
+ 
   try {
     // Verificar se o email já está cadastrado em users ou institutions
     const checkEmail = await db.query(`
@@ -158,14 +189,24 @@ app.post("/register-user", async (req, res) => {
 
     if (checkEmail.rows[0]) return res.status(409).json({ message: "Email já registrado" });
 
+    // Verificar se o CPF já foi cadastrado
+    const checkCPF = await db.query("SELECT * FROM patients WHERE cpf = $1",
+      [cpf]
+    );
+
+    if (checkCPF.rows[0]) return res.status(409).json({ message: "CPF já registrado" });
+
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const newUserResult = await db.query(
-      "INSERT INTO users (name, email, password, accepted_terms) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, email, hashedPassword, termsAccepted]
+      "INSERT INTO users (name, email, password, type, accepted_terms) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [name, email, hashedPassword, type, termsAccepted]
     );
 
     const newUser = newUserResult.rows[0];
+
+    // Caso o usuário seja do tipo 'doctor', impede que tente criar uma sessão após o cadastro
+    if (newUser.type === 'doctor') return res.status(201).json({ message: "Usuário registrado com sucesso", user: newUser });
 
     // Cria sessão imediatamente após o cadastro
     req.logIn(newUser, (err) => {
@@ -179,20 +220,21 @@ app.post("/register-user", async (req, res) => {
   }
 });
 
-// Informações adicionais do paciente
+// Informações do paciente
 app.post("/patient", async (req, res) => {
   const {user_id, cpf, phone, gender, birth_date} = req.body;
 
+  console.log(req.body)
+
   try {
-    const response = await db.query("INSERT INTO patients (user_id, cpf, phone, gender, birth_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    await db.query("INSERT INTO patients (user_id, cpf, phone, gender, birth_date) VALUES ($1, $2, $3, $4, $5)",
       [user_id, cpf, phone, gender, birth_date]
     );
-    const patient = response.rows[0];
-    return res.status(201).json({ message: "Informações cadastradas com sucesso", patient });
+    return res.status(201).json({ message: "Informações cadastradas com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro no servidor ao adicionar informações" });
   }
-})
+});
 
 // Registro de instituição
 app.post("/institution", upload.single('image'), async (req, res) => {
@@ -209,13 +251,13 @@ app.post("/institution", upload.single('image'), async (req, res) => {
       SELECT 1 FROM institutions WHERE email = $1
     `, [email]);
 
-    // Verificar se o cnpj já está cadastrado
-    const checkCNPJ = await db.query("SELECT 1 FROM institutions WHERE cnpj = $1", [cnpj]);
-
     if (checkEmail.rows[0]) {
       if (req.file) fs.unlinkSync(req.file.path); // remove a imagem salva
       return res.status(401).json({ message: "Email já cadastrado" });
     };
+
+    // Verificar se o cnpj já está cadastrado
+    const checkCNPJ = await db.query("SELECT 1 FROM institutions WHERE cnpj = $1", [cnpj]);
 
     if (checkCNPJ.rows[0]) {
       if (req.file) fs.unlinkSync(req.file.path); // remove a imagem salva
@@ -225,7 +267,7 @@ app.post("/institution", upload.single('image'), async (req, res) => {
     // Inserir instituição no banco de dados
     await db.query(
       `INSERT INTO institutions (name, cnpj, email, phone, address, city, state, zip_code, image_path)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [name, cnpj, email, phone, address, city, state, zip_code, imagePath]
     );
 
@@ -233,6 +275,57 @@ app.post("/institution", upload.single('image'), async (req, res) => {
   } catch (error) {
     console.error("Erro ao registrar instituição:", error);
     return res.status(500).json({ message: "Erro no servidor", error });
+  }
+});
+
+// Resgistro de médico
+app.post("/doctor", upload.single('image'), async (req, res) => {
+  try {
+    // Extração segura dos dados do corpo (todos são string quando vêm do multipart/form-data)
+    const {
+      cpf,
+      phone,
+      birth,
+      gender,
+      institution,
+      specialty,
+      availableDays,
+      schedule,
+      user_id,
+    } = req.body;
+
+    const image_path = req.file ? req.file.path.replace(/\\/g, "/") : null;
+
+    // Transforma availableDays (string JSON) em array para PostgreSQL
+    const parsedAvailableDays = JSON.parse(availableDays); // array de strings
+
+    // Transforma schedule (string JSON) em objeto JSON válido
+    const parsedSchedule = JSON.parse(schedule); // objeto com dias, horários, etc.
+
+    // Insere no banco
+    await db.query(
+      `INSERT INTO doctors 
+        (cpf, phone, birth, gender, institution_id, specialty, available_days, schedule, image_path, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+      [
+        cpf,
+        phone,
+        birth,
+        gender,
+        parseInt(institution), // cuidado: isso vem como string do req.body
+        specialty,
+        parsedAvailableDays,   // array
+        parsedSchedule,        // jsonb
+        image_path,
+        parseInt(user_id)
+      ]
+    );
+
+    res.status(201).json({ message: "Médico registrado com sucesso" });
+
+  } catch (error) {
+    console.error("Erro ao registrar médico:", error);
+    res.status(500).json({ message: "Erro no servidor", error });
   }
 });
 

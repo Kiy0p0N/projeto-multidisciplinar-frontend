@@ -35,3 +35,20 @@ CREATE TABLE institutions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Tabela para informações sobre o médico
+CREATE TABLE doctors (
+    id SERIAL PRIMARY KEY,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    birth DATE NOT NULL,
+    gender VARCHAR(20) NOT NULL,
+    institution_id INTEGER NOT NULL,
+    specialty VARCHAR(100) NOT NULL,
+    available_days TEXT[] NOT NULL,
+    schedule JSONB NOT NULL,
+    image_path TEXT,
+    user_id INTEGER UNIQUE NOT NULL,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_institution FOREIGN KEY (institution_id) REFERENCES institutions(id) ON DELETE SET NULL
+);

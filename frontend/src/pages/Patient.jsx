@@ -6,23 +6,12 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PhoneIcon from "@mui/icons-material/Phone";
 import BadgeIcon from "@mui/icons-material/Badge";
 import axios from "axios";
-
-// Componentes personalizados
-import NumbersInput from "../components/input/NumbersInput";
-import TextInput from "../components/input/TextInput";
-import SelectInput from "../components/input/SelectInput";
 import SearchInput from "../components/input/SearchInput";
 
 function Patient() {
     const [user, setUser] = useState(null);
     const [patient, setPatient] = useState(null);
-    const [form, setForm] = useState({
-        cpf: '',
-        birth_date: '',
-        phone: '',
-        gender: '',
-        user_id: '',
-    });
+    const [error, setError] = useState(null);
 
     const navigate = useNavigate();
 
@@ -35,8 +24,12 @@ function Patient() {
                 });
 
                 if (response.status === 200 && response.data.user) {
-                    setUser(response.data.user);
-                    setForm(prev => ({ ...prev, user_id: response.data.user.id }));
+                    if (response.data.user.type === 'patient') {
+                        console.log(response.data.user)
+                        setUser(response.data.user);
+                    } else {
+                        setError('Indisponível para seu tipo de usuário');
+                    }
                 }
             } catch (error) {
                 console.error("Erro ao buscar usuário:", error);
@@ -56,7 +49,7 @@ function Patient() {
                         setPatient(response.data.patient);
                     }
                 } catch {
-                    console.log("Paciente não encontrado (provavelmente novo usuário)");
+                    console.log("Paciente não encontrado");
                 }
             };
             fetchPatient();
@@ -74,27 +67,6 @@ function Patient() {
             }
         } catch (error) {
             console.error("Erro ao fazer logout:", error);
-        }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const isFormValid = form.cpf && form.birth_date && form.phone && form.gender && form.user_id;
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post("http://localhost:3000/patient", form, {
-                withCredentials: true,
-            });
-            if (response.status === 201 && response.data.patient) {
-                setPatient(response.data.patient);
-            }
-        } catch (error) {
-            console.error("Erro ao registrar paciente:", error);
         }
     };
 
@@ -171,84 +143,15 @@ function Patient() {
         );
     }
 
-    // Formulário de cadastro
     if (user && !patient) {
         return (
             <main className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-white pt-24 pb-12">
-                <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-10 rounded-2xl shadow-2xl space-y-4 flex flex-col">
-                    <h2 className="text-2xl font-bold text-center text-blue-800">Complete seu cadastro</h2>
-
-                    <NumbersInput
-                        htmlFor="cpf"
-                        label="CPF"
-                        id="cpf"
-                        name="cpf"
-                        value={form.cpf}
-                        delimiters={['.', '.', '-']}
-                        blocks={[3, 3, 3, 2]}
-                        minLength={14}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <NumbersInput
-                        htmlFor="phone"
-                        label="Telefone"
-                        id="phone"
-                        name="phone"
-                        value={form.phone}
-                        delimiters={['(', ')', ' ', ' ', '-']}
-                        blocks={[0, 2, 0, 1, 4, 4]}
-                        minLength={16}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <TextInput
-                        htmlFor="birth_date"
-                        label="Data de nascimento"
-                        id="birth_date"
-                        name="birth_date"
-                        type="date"
-                        value={form.birth_date}
-                        onChange={handleChange}
-                        required
-                    />
-
-                    <SelectInput
-                        htmlFor="gender"
-                        label="Gênero"
-                        id="gender"
-                        name="gender"
-                        value={form.gender}
-                        onChange={handleChange}
-                        required
-                        options={[
-                            { value: "masculino", label: "Masculino" },
-                            { value: "feminino", label: "Feminino" },
-                            { value: "outro", label: "Outro" }
-                        ]}
-                    />
-
-                    <Button type="submit" variant="contained" disabled={!isFormValid}>
-                        Enviar
-                    </Button>
-                    
-                    <hr />
-
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<LogoutIcon />}
-                        onClick={handleLogout}
-                    >
-                        Cancelar
-                    </Button>
-                </form>
+                <h1 className="text-4xl font-bold text-red-500">{error}</h1>
             </main>
         );
     }
 
+    // Caso não possua 
     return null;
 }
 

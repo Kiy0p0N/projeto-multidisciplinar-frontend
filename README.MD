@@ -154,10 +154,16 @@ Protótipos são versões preliminares da interface de um sistema.
     - Axios
 
 2. ### Backend
-    - Express
-    - Bcrypt
+    - express
+    - bcrypt
     - dotenv
     - pg
+    - express-session
+    - passport
+    - passport-local
+    - multer
+    - path
+    - fs
 
 3. ### Banco de dados
     - Postgresql
@@ -176,7 +182,7 @@ Observação: atualmente só funciona localmente.
 - [x] Informa erros, como email ou senha incorretas
 - [x] Permite sessões
 - [X] Registro de instituições de saúde
-- [ ] Registro de médicos
+- [X] Registro de médicos
 - [ ] Agendamentos
 
 </div>

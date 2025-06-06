@@ -22,19 +22,20 @@ function InstitutionForm() {
     });
 
     const [error, setError] = useState(null); // Armazena mensagens de erro
+    const [success, setSuccess] = useState(null);
 
     // Função para atualizar o estado do formulário ao digitar nos inputs
     const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     // Função para tratar o upload de imagem
     const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        setPreview(URL.createObjectURL(file)); // Gera um preview da imagem
-    }
+        const file = e.target.files[0];
+        if (file) {
+            setPreview(URL.createObjectURL(file)); // Gera um preview da imagem
+        }
     };
 
     // Verifica se todos os campos obrigatórios foram preenchidos
@@ -76,7 +77,7 @@ function InstitutionForm() {
             });
 
             if (response.status === 200) {
-                alert(response.data.message);
+                setSuccess(response.data.message);
             }
         } catch (error) {
             if (error.response) {
@@ -93,7 +94,7 @@ function InstitutionForm() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4 max-w-2xl max-h-96 overflow-y-auto mx-auto bg-white p-8 shadow-lg rounded-xl"
+            className="form shadow-lg"
         >
 
             {/* Exibição de erros, se houver */}
@@ -207,6 +208,8 @@ function InstitutionForm() {
             onChange={handleImageChange}
             preview={preview}
             />
+
+            {success && (<p className="text-center text-green-500">{success}</p>)}
 
             {/* Botão de envio - desativado se o formulário estiver incompleto */}
             <Button

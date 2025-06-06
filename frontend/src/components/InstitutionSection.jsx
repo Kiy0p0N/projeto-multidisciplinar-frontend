@@ -3,7 +3,7 @@ import axios from 'axios';
 import BusinessIcon from '@mui/icons-material/Business';
 
 function InstitutionSection() {
-    const [institutions, setInstitutions] = useState(null);
+    const [institutions, setInstitutions] = useState([]);
 
     useEffect(() => {
         const fetchInstitution = async () => {

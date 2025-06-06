@@ -14,8 +14,8 @@ function SelectInput({ htmlFor, label, id, name, required, value, onChange, opti
             >
                 <option value="">Selecione...</option>
                 {options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                        {option.label}
+                    <option key={option.id || option.value} value={option.id || option.value}>
+                        {option.name || option.label}
                     </option>
                 ))}
             </select>

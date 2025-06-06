@@ -15,11 +15,13 @@ import SearchInput from "../components/input/SearchInput";
 import InstitutionForm from "../components/form/InstitutionForm";
 import PatientSection from "../components/PatientSection";
 import InstitutionSection from "../components/InstitutionSection";
+import DoctorForm from "../components/form/DoctorForm";
+import DoctorSection from "../components/DoctorSection";
 
 function Admin() {
     const [admin, setAdmin] = useState(null);
-    const [patients, setPatients] = useState(null);
     const [showInstitutionForm, setShowInstitutionForm] = useState(false); // Estado para mostrar/ocultar formulário
+    const [showDoctorForm, setDoctorForm] = useState(false);
 
     const navigate = useNavigate();
 
@@ -32,7 +34,11 @@ function Admin() {
                 });
 
                 if (response.status === 200) {
-                    setAdmin(response.data.user);
+                    const user = response.data.user;
+
+                    if (user.type === 'admin') {
+                        setAdmin(user);
+                    }
                 }
             } catch (error) {
                 console.error("Erro ao buscar usuário:", error);
@@ -41,20 +47,6 @@ function Admin() {
         };
 
         fetchAdmin();
-    }, [navigate]);
-
-    // Pega todos os pacientes
-    useEffect(() => {
-        const fetchPatients = async () => {
-            try {
-                const response = await axios.get("http://localhost:3000/patients");
-                setPatients(response.data.patients);
-            } catch (error) {
-                console.error("Erro ao buscar pacientes:", error);
-            }
-        }
-
-        fetchPatients()
     }, [navigate]);
 
     // Faz logout e redireciona para a página inicial
@@ -76,7 +68,11 @@ function Admin() {
     // Alterna exibição do formulário
     const toggleInstitutionForm = () => {
         setShowInstitutionForm(prev => !prev);
-    }
+    };
+
+    const toggleDoctorForm = () => {
+        setDoctorForm(prev => !prev);
+    };
     
     // Enquanto admin não é carregado, não renderiza
     if (!admin) return null;
@@ -104,13 +100,34 @@ function Admin() {
                 </div>
             )}
 
+            {/* Formulário sobreposto para adicionar médico */}
+            {showDoctorForm && (
+                <div className="fixed inset-0 bg-zinc-400/80 bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md relative">
+                        {/* Botão de fechar */}
+                        <IconButton
+                            onClick={toggleDoctorForm}
+                            className="absolute top-2 right-2"
+                            size="small"
+                        >
+                            <CloseIcon />
+                        </IconButton>
+
+                        <h2 className="text-xl font-semibold mb-4 text-center text-purple-600">Adicionar Médico</h2>
+
+                        {/* Formulário para cadastro de médico */}
+                        <DoctorForm />
+                    </div>
+                </div>
+            )}
+
             {/* Barra lateral com ações administrativas */}
             <aside className="w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
                 <h1 className="text-lg font-semibold text-center mb-4">Painel do Administrador</h1>
 
                 <nav className="flex flex-col gap-3">
                     {/* Botões de cadastro */}
-                    <Button variant="contained" startIcon={<MedicalServicesIcon />}>
+                    <Button variant="contained" startIcon={<MedicalServicesIcon />} onClick={toggleDoctorForm}>
                         Cadastrar Profissional
                     </Button>
 
@@ -167,18 +184,7 @@ function Admin() {
                     </div>
 
                     {/* Médicos cadastrados */}
-                    <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-1">
-                        <div className="sticky top-0 bg-white z-10 pb-2">
-                            <div className="flex items-center gap-2 text-indigo-600">
-                                <MedicalServicesIcon />
-                                <h2 className="text-md font-semibold">Profissionais Ativos</h2>
-                            </div>
-                            <p className="text-sm text-gray-500">Lista de profissionais será exibida aqui.</p>
-                        </div>
-                        <div className="max-h-60 overflow-y-auto relative">
-
-                        </div>
-                    </div>
+                    <DoctorSection />
                     
                     {/* Instituições cadastradas */}
                     <InstitutionSection />
