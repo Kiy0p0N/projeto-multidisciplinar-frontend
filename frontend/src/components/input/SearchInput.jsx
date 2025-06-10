@@ -5,8 +5,9 @@ function SearchInput({ placeholder = "Buscar...", onSearch }) {
     const [query, setQuery] = useState('');
 
     const handleChange = (e) => {
-        setQuery(e.target.value);
-        if (onSearch) onSearch(e.target.value);
+        const value = e.target.value;
+        setQuery(value);
+        if (onSearch) onSearch(value);
     };
 
     return (

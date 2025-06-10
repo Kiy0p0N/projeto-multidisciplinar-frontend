@@ -1,25 +1,62 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import BusinessIcon from '@mui/icons-material/Business';
+import SearchInput from './input/SearchInput';
+import { Button, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useLocation } from 'react-router-dom';
 
 function InstitutionSection() {
-    const [institutions, setInstitutions] = useState([]);
+    const [allInstitutions, setAllInstitutions] = useState([]);
+    const [filteredInstitutions, setFilteredInstitutions] = useState([]);
+    const [selectedInstitution, setSelectedInstitution] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
+    const location = useLocation();
+
+    // Buscar todas as instituições na montagem do componente
     useEffect(() => {
-        const fetchInstitution = async () => {
+        const fetchInstitutions = async () => {
             try {
                 const response = await axios.get("http://localhost:3000/institutions");
-                setInstitutions(response.data.institutions);
+                setAllInstitutions(response.data.institutions);
+                setFilteredInstitutions(response.data.institutions);
             } catch (error) {
                 console.error(error);
             }
-        }
+        };
 
-        fetchInstitution();
+        fetchInstitutions();
     }, []);
+
+    // Filtrar instituições conforme o texto digitado
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        const lowerQuery = query.toLowerCase();
+
+        const filtered = allInstitutions.filter((institution) =>
+            institution.name.toLowerCase().includes(lowerQuery) ||
+            institution.city.toLowerCase().includes(lowerQuery) ||
+            institution.id.toString().includes(lowerQuery)
+        );
+
+        setFilteredInstitutions(filtered);
+    };
+
+    // Abrir modal de detalhes da instituição
+    const handleInstitutionClick = (institution) => {
+        setSelectedInstitution(institution);
+    };
+
+    // Fechar modal
+    const closeModal = () => {
+        setSelectedInstitution(null);
+    };
 
     return (
         <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-1">
+            {/* Cabeçalho */}
             <div className="sticky top-0 bg-white z-10 pb-2">
                 <div className="flex items-center gap-2 text-purple-600">
                     <BusinessIcon />
@@ -27,30 +64,85 @@ function InstitutionSection() {
                 </div>
                 <p className="text-sm text-gray-500">Lista de instituições será exibida aqui.</p>
             </div>
-            <div className="max-h-60 overflow-y-auto relative">
-                {institutions && (
-                    institutions.map((institution) => (
-                        <div
-                            key={institution.id}
-                            className="flex justify-between items-center border-b border-gray-200 py-4 px-6 bg-white rounded shadow-sm"
-                        >
-                            {/* Conteúdo textual à esquerda */}
-                            <div className="flex flex-col">
-                                <p className="text-base font-semibold text-gray-800">{institution.name}</p>
-                                <p className="text-sm text-gray-600">{institution.city} - {institution.state}</p>
-                                <p className="text-sm text-gray-500">{institution.email}</p>
-                            </div>
 
-                            {/* Imagem à direita */}
-                            <img
-                                src={`http://localhost:3000/${institution.image_path.replace(/\\/g, "/")}`}
-                                alt={`Imagem da instituição ${institution.name}`}
-                                className="w-24 h-24 object-cover rounded-lg shadow-md"
-                            />
+            {/* Campo de busca */}
+            <SearchInput
+                placeholder="Pesquise com o ID, nome ou cidade da instituição"
+                onSearch={handleSearch}
+            />
+
+            {/* Lista de instituições */}
+            <div className="max-h-60 overflow-y-auto relative divide-y divide-gray-200">
+                {filteredInstitutions.map((institution) => (
+                    <div
+                        key={institution.id}
+                        onClick={() => handleInstitutionClick(institution)}
+                        className="flex justify-between items-center py-3 px-4 bg-white hover:bg-purple-50 rounded cursor-pointer transition-all"
+                    >
+                        {/* Informações textuais */}
+                        <div className="flex flex-col">
+                            <p className="text-base font-semibold text-gray-800">{institution.name}</p>
+                            <p className="text-sm text-gray-600">{institution.city} - {institution.state}</p>
+                            <p className="text-sm text-gray-500">{institution.email}</p>
                         </div>
-                    ))
+
+                        {/* Imagem da instituição */}
+                        <img
+                            src={`http://localhost:3000/${institution.image_path.replace(/\\/g, "/")}`}
+                            alt={`Imagem da instituição ${institution.name}`}
+                            className="w-20 h-20 object-cover rounded-lg shadow-md"
+                        />
+                    </div>
+                ))}
+                {filteredInstitutions.length === 0 && (
+                    <p className="text-center text-sm text-gray-400 mt-2">Nenhuma instituição encontrada.</p>
                 )}
             </div>
+
+            {/* Modal com detalhes da instituição */}
+            {selectedInstitution && (
+                <div className="fixed inset-0 bg-zinc-700/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
+                        {/* Botão de fechar */}
+                        <div className='w-full px-3 flex justify-end'>
+                            <IconButton
+                                onClick={closeModal}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </div>
+
+                        {/* Imagem de capa */}
+                        <div
+                            className="h-48 bg-cover bg-center relative"
+                            style={{
+                                backgroundImage: `url(http://localhost:3000/${selectedInstitution.image_path.replace(/\\/g, "/")})`
+                            }}
+                        >
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                <h2 className="text-xl font-bold text-white text-center px-4">
+                                    {selectedInstitution.name}
+                                </h2>
+                            </div>
+                        </div>
+
+                        {/* Informações da instituição */}
+                        <div className="p-6 space-y-3 text-gray-800 text-sm">
+                            <p><strong>ID:</strong> {selectedInstitution.id}</p>
+                            <p><strong>Cidade:</strong> {selectedInstitution.city}</p>
+                            <p><strong>Estado:</strong> {selectedInstitution.state}</p>
+                            <p><strong>Email:</strong> {selectedInstitution.email}</p>
+                            <p><strong>Telefone:</strong> {selectedInstitution.phone || 'Não informado'}</p>
+                            <p><strong>Descrição:</strong> {selectedInstitution.description || 'Sem descrição disponível'}</p>
+
+                            {/* Botão para o admin deletar a instituição */}
+                            {location.pathname === '/admin' && (
+                                <Button variant="contained" color="error" startIcon={<DeleteIcon />}>Deletar</Button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

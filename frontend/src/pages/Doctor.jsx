@@ -5,18 +5,19 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PhoneIcon from "@mui/icons-material/Phone";
 import BadgeIcon from "@mui/icons-material/Badge";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import WorkIcon from "@mui/icons-material/Work";
 import axios from "axios";
-import DoctorSection from "../components/DoctorSection";
-import InstitutionSection from "../components/InstitutionSection";
+import PatientSection from "../components/PatientSection";
 
-function Patient() {
+function Doctor() {
     const [user, setUser] = useState(null);
-    const [patient, setPatient] = useState(null);
+    const [doctor, setDoctor] = useState(null);
     const [error, setError] = useState(null);
 
     const navigate = useNavigate();
 
-    // Buscar dados do usuário logado
+    // Buscar usuário logado
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -25,8 +26,7 @@ function Patient() {
                 });
 
                 if (response.status === 200 && response.data.user) {
-                    if (response.data.user.type === 'patient') {
-                        console.log(response.data.user)
+                    if (response.data.user.type === 'doctor') {
                         setUser(response.data.user);
                     } else {
                         setError('Indisponível para seu tipo de usuário');
@@ -40,24 +40,23 @@ function Patient() {
         fetchUser();
     }, [navigate]);
 
-    // Buscar dados do paciente (caso já existam)
+    // Buscar dados do médico
     useEffect(() => {
         if (user) {
-            const fetchPatient = async () => {
+            const fetchDoctor = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:3000/patient/${user.id}`);
-                    if (response.status === 200 && response.data.patient) {
-                        setPatient(response.data.patient);
+                    const response = await axios.get(`http://localhost:3000/doctor/${user.id}`);
+                    if (response.status === 200 && response.data.doctor) {
+                        setDoctor(response.data.doctor);
                     }
                 } catch {
-                    console.log("Paciente não encontrado");
+                    console.log("Médico não encontrado");
                 }
             };
-            fetchPatient();
+            fetchDoctor();
         }
     }, [user]);
 
-    // Logout
     const handleLogout = async () => {
         try {
             const response = await axios.get("http://localhost:3000/logout", {
@@ -82,21 +81,21 @@ function Patient() {
         return age;
     };
 
-    // Tela após cadastro completo
-    if (user && patient) {
+    if (user && doctor) {
         return (
             <main className="w-full min-h-dvh flex py-24 bg-gray-100 relative">
-            
-                {/* Dados pessoais */}
+                {/* Dados do médico */}
                 <aside className="w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
                     <h2 className="text-lg font-semibold text-blue-700 mb-4 text-center">Seus dados</h2>
                     <div className="text-sm text-gray-800 space-y-2">
                         <p><strong>Nome:</strong> {user.name}</p>
                         <p><BadgeIcon fontSize="small" /> <strong>ID:</strong> {user.id}</p>
-                        <p><strong>CPF:</strong> {patient.cpf}</p>
-                        <p><CalendarMonthIcon fontSize="small" /> <strong>Idade:</strong> {calculateAge(patient.birth_date)}</p>
-                        <p><strong>Gênero:</strong> {patient.gender}</p>
-                        <p><PhoneIcon fontSize="small" /> <strong>Telefone:</strong> {patient.phone}</p>
+                        <p><strong>CPF:</strong> {doctor.cpf}</p>
+                        <p><CalendarMonthIcon fontSize="small" /> <strong>Idade:</strong> {calculateAge(doctor.birth)}</p>
+                        <p><strong>Gênero:</strong> {doctor.gender}</p>
+                        <p><PhoneIcon fontSize="small" /> <strong>Telefone:</strong> {doctor.phone}</p>
+                        <p><LocalHospitalIcon fontSize="small" /> <strong>Instituição:</strong> {doctor.institution_name || "—"}</p>
+                        <p><WorkIcon fontSize="small" /> <strong>Especialidade:</strong> {doctor.specialty}</p>
                     </div>
                     <Button
                         variant="contained"
@@ -112,18 +111,15 @@ function Patient() {
                 {/* Conteúdo principal */}
                 <section className="w-4/5 px-8">
                     <div className="grid grid-cols-2 gap-6">
-                        {/* Médicos */}
-                        <DoctorSection />
-
-                        {/* Instituições */}
-                        <InstitutionSection />
+                        {/* Pacientes e agendamentos */}
+                        <PatientSection doctorId={doctor.id} />
                     </div>
                 </section>
             </main>
         );
     }
 
-    if (user && !patient) {
+    if (user && !doctor) {
         return (
             <main className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-white pt-24 pb-12">
                 <h1 className="text-4xl font-bold text-red-500">{error}</h1>
@@ -131,8 +127,7 @@ function Patient() {
         );
     }
 
-    // Caso não possua 
     return null;
 }
 
-export default Patient;
+export default Doctor;

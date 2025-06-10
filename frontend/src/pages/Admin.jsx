@@ -11,7 +11,6 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import HotelIcon from '@mui/icons-material/Hotel';
 import CloseIcon from '@mui/icons-material/Close';
 
-import SearchInput from "../components/input/SearchInput";
 import InstitutionForm from "../components/form/InstitutionForm";
 import PatientSection from "../components/PatientSection";
 import InstitutionSection from "../components/InstitutionSection";
@@ -86,7 +85,7 @@ function Admin() {
                         {/* Botão de fechar */}
                         <IconButton
                             onClick={toggleInstitutionForm}
-                            className="absolute top-2 right-2"
+                            className="absolute top-0 right-2"
                             size="small"
                         >
                             <CloseIcon />
@@ -158,11 +157,6 @@ function Admin() {
 
             {/* Conteúdo principal do painel */}
             <section className="w-4/5 px-8">
-                {/* Campo de busca global */}
-                <div className="mb-6">
-                    <SearchInput placeholder="Buscar pacientes, médicos ou instituições..." />
-                </div>
-
                 {/* Painéis de dados principais */}
                 <div className="grid grid-cols-2 gap-6">
                     {/* Pacientes cadastrados */}

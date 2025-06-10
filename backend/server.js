@@ -100,7 +100,12 @@ app.get("/logout", (req, res) => {
 // Retorna todos os pacientes
 app.get("/patients", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM users WHERE type = 'patient' ORDER BY created_at DESC LIMIT 20");
+    const result = await db.query(`
+      SELECT users.id, users.name, users.email, patients.birth_date, patients.phone, patients.gender
+      FROM users
+      INNER JOIN patients
+      ON users.id = patients.user_id  
+    `);
     const patients = result.rows;
     return res.status(200).json({ message: "Pacientes encontrados ", patients});
   } catch (error) {
@@ -126,6 +131,23 @@ app.get("/patient/:id", async (req, res) => {
   }
 });
 
+// Informações adicionais do médico
+app.get("/doctor/:id", async (req, res) => {
+  const user_id = req.params.id;
+
+  try {
+    const result = await db.query("SELECT * FROM doctors WHERE user_id = $1", [user_id]);
+    const doctor = result.rows[0];
+
+    if (!doctor) return res.status(401).json({ message: "Médico não encontrado" });
+
+    return res.status(200).json({ message: "Médico encontrado", doctor });
+  } catch (error) {
+    console.error("Erro na busca:", error);
+    res.status(500).json({ message: "Erro ao buscar médico:", error });
+  }
+});
+
 // Retorna todas as instituições
 app.get("/institutions", async (req, res) => {
   try {
@@ -142,10 +164,17 @@ app.get("/institutions", async (req, res) => {
 app.get("/doctors", async (req, res) => {
   try {
     const response = await db.query(`
-      SELECT users.id, users.name, users.email, doctors.specialty, doctors.image_path
+      SELECT 
+        users.id, 
+        users.name AS user_name, 
+        users.email AS user_email, 
+        doctors.phone AS doctor_phone, 
+        doctors.specialty,
+        doctors.image_path,
+        institutions.name AS institution_name
       FROM users
-      INNER JOIN doctors
-      ON users.id = doctors.user_id  
+      INNER JOIN doctors ON users.id = doctors.user_id
+      INNER JOIN institutions ON doctors.institution_id = institutions.id 
     `);
 
     return res.status(200).json({ message: "Médicos enconstrados", doctors: response.rows});
