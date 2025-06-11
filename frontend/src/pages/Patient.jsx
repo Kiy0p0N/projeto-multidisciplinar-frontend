@@ -26,7 +26,6 @@ function Patient() {
 
                 if (response.status === 200 && response.data.user) {
                     if (response.data.user.type === 'patient') {
-                        console.log(response.data.user)
                         setUser(response.data.user);
                     } else {
                         setError('Indisponível para seu tipo de usuário');

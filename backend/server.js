@@ -171,6 +171,8 @@ app.get("/doctors", async (req, res) => {
         doctors.phone AS doctor_phone, 
         doctors.specialty,
         doctors.image_path,
+        doctors.available_days,
+        doctors.schedule,
         institutions.name AS institution_name
       FROM users
       INNER JOIN doctors ON users.id = doctors.user_id

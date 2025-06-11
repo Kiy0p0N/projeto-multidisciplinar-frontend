@@ -1,42 +1,49 @@
+// Importações de hooks do React e bibliotecas auxiliares
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+
+// Ícones do Material UI
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import SearchInput from './input/SearchInput';
 import { IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useLocation } from 'react-router-dom';
+
+import { useLocation } from 'react-router-dom'; // Hook para saber qual é a rota atual
+import AppointmentForm from './form/AppointmentForm'; // Componente de agendamento
 
 function DoctorSection() {
-    const [allDoctors, setAllDoctors] = useState([]);
-    const [filteredDoctors, setFilteredDoctors] = useState([]);
-    const [selectedDoctor, setSelectedDoctor] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
+    // Estados para controle de dados e interações
+    const [allDoctors, setAllDoctors] = useState([]); // Todos os médicos recebidos da API
+    const [filteredDoctors, setFilteredDoctors] = useState([]); // Médicos filtrados pela busca
+    const [selectedDoctor, setSelectedDoctor] = useState(null); // Médico selecionado para detalhes
+    const [showAppointmentForm, setShowAppointmentForm] = useState(false); // Exibe ou esconde formulário
+    const [searchQuery, setSearchQuery] = useState(''); // Texto da barra de pesquisa
 
-    const location = useLocation();
+    const location = useLocation(); // Localização atual (rota)
 
-    // Buscar todos os médicos na montagem do componente
+    // useEffect para buscar médicos da API assim que o componente monta
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
                 const response = await axios.get("http://localhost:3000/doctors");
-                setAllDoctors(response.data.doctors);
-                setFilteredDoctors(response.data.doctors);
+                setAllDoctors(response.data.doctors); // Salva todos os médicos
+                setFilteredDoctors(response.data.doctors); // Inicialmente, lista completa é mostrada
             } catch (error) {
                 console.error(error);
             }
         };
 
-        fetchDoctors();
+        fetchDoctors(); // Executa função assíncrona
     }, []);
 
-    // Filtrar médicos com base na busca
+    // Função de busca que filtra médicos pelo nome, especialidade ou ID
     const handleSearch = (query) => {
         setSearchQuery(query);
         const lowerQuery = query.toLowerCase();
 
         const filtered = allDoctors.filter((doctor) =>
-            doctor.name.toLowerCase().includes(lowerQuery) ||
+            doctor.user_name.toLowerCase().includes(lowerQuery) ||
             doctor.specialty.toLowerCase().includes(lowerQuery) ||
             doctor.id.toString().includes(lowerQuery)
         );
@@ -44,12 +51,13 @@ function DoctorSection() {
         setFilteredDoctors(filtered);
     };
 
-    // Abrir modal com detalhes do médico
+    // Quando o usuário clica em um médico da lista
     const handleDoctorClick = (doctor) => {
         setSelectedDoctor(doctor);
+        setShowAppointmentForm(false); // Oculta formulário ao trocar de médico
     };
 
-    // Fechar modal
+    // Fecha o modal de detalhes do médico
     const closeModal = () => {
         setSelectedDoctor(null);
     };
@@ -73,7 +81,7 @@ function DoctorSection() {
                 />
             </div>
 
-            {/* Lista de médicos */}
+            {/* Lista de médicos (rolável) */}
             <div className="max-h-60 overflow-y-auto relative divide-y divide-gray-200">
                 {filteredDoctors.map((doctor) => (
                     <div
@@ -81,14 +89,13 @@ function DoctorSection() {
                         onClick={() => handleDoctorClick(doctor)}
                         className="flex justify-between items-center py-3 px-4 bg-white hover:bg-indigo-50 rounded cursor-pointer transition-all"
                     >
-                        {/* Dados textuais do médico */}
                         <div className="flex flex-col">
                             <p className="text-base font-semibold text-gray-800">{doctor.user_name}</p>
                             <p className="text-sm text-gray-500">{doctor.specialty}</p>
                             <p className="text-sm text-gray-500">{doctor.user_email}</p>
                         </div>
 
-                        {/* Foto do médico */}
+                        {/* Imagem do médico */}
                         <img 
                             src={`http://localhost:3000/${doctor.image_path.replace(/\\/g, "/")}`}
                             alt={`Imagem do médico ${doctor.name}`}
@@ -97,25 +104,25 @@ function DoctorSection() {
                     </div>
                 ))}
 
+                {/* Caso nenhum médico seja encontrado */}
                 {filteredDoctors.length === 0 && (
                     <p className="text-center text-sm text-gray-400 mt-2">Nenhum médico encontrado.</p>
                 )}
             </div>
 
-            {/* Modal de detalhes do médico */}
+            {/* Modal com os detalhes do médico selecionado */}
             {selectedDoctor && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden relative">
-                        {/* Botão de fechar */}
+                    <div className="max-h-96 overflow-y-auto bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden relative">
+                        
+                        {/* Botão de fechar no canto superior direito */}
                         <div className='w-full px-3 flex justify-end'>
-                            <IconButton
-                                onClick={closeModal}
-                            >
+                            <IconButton onClick={closeModal}>
                                 <CloseIcon />
                             </IconButton>
                         </div>
 
-                        {/* Foto de perfil grande */}
+                        {/* Cabeçalho com imagem e nome */}
                         <div className="flex flex-col items-center bg-indigo-600 pb-6 pt-10 relative">
                             <img
                                 src={`http://localhost:3000/${selectedDoctor.image_path.replace(/\\/g, "/")}`}
@@ -126,7 +133,7 @@ function DoctorSection() {
                             <p className="text-indigo-100 text-sm">{selectedDoctor.specialty}</p>
                         </div>
 
-                        {/* Informações detalhadas */}
+                        {/* Detalhes do médico */}
                         <div className="p-6 space-y-3 text-gray-800 text-sm">
                             <p><strong>ID:</strong> {selectedDoctor.id}</p>
                             <p><strong>Email:</strong> {selectedDoctor.user_email}</p>
@@ -135,9 +142,33 @@ function DoctorSection() {
                             <p><strong>Instituição:</strong> {selectedDoctor.institution_name || 'Não vinculada'}</p>
                             <p><strong>Biografia:</strong> {selectedDoctor.bio || 'Sem informações adicionais.'}</p>
 
-                            {/* Botão para o admin deletar o médico */}
+                            {/* Botão de deletar visível apenas no painel do admin */}
                             {location.pathname === '/admin' && (
-                                <Button variant="contained" color="error" startIcon={<DeleteIcon />}>Deletar</Button>
+                                <Button variant="contained" color="error" startIcon={<DeleteIcon />}>
+                                    Deletar
+                                </Button>
+                            )}
+
+                            {/* Botão de agendar visível apenas no painel do paciente */}
+                            {location.pathname === '/patient' && (
+                                <Button 
+                                    variant="contained" 
+                                    color="primary" 
+                                    fullWidth 
+                                    onClick={() => setShowAppointmentForm(!showAppointmentForm)}
+                                >
+                                    Agendar Consulta
+                                </Button>
+                            )}
+
+                            {/* Formulário de agendamento (visível ao clicar em Agendar) */}
+                            {showAppointmentForm && (
+                                <div className="mt-4">
+                                    <AppointmentForm 
+                                        doctor={selectedDoctor} 
+                                        onClose={() => setShowAppointmentForm(false)} 
+                                    />
+                                </div>
                             )}
                         </div>
                     </div>
