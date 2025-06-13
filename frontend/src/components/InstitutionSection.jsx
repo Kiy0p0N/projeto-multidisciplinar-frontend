@@ -12,6 +12,7 @@ function InstitutionSection() {
     const [filteredInstitutions, setFilteredInstitutions] = useState([]);
     const [selectedInstitution, setSelectedInstitution] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [confirmDeleteForm, setConfirmDeleteForm] = useState(false);
 
     const location = useLocation();
 
@@ -49,10 +50,28 @@ function InstitutionSection() {
         setSelectedInstitution(institution);
     };
 
+    // Função para o admin deletar uma instituição
+    const handleDelete = async () => {
+        try {
+            const deleteDoctor = await axios.delete(`http://localhost:3000/institution/${selectedInstitution.id}`);
+
+            if (deleteDoctor.status === 200) {
+                window.location.reload(); // Força o refresh da página
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     // Fechar modal
     const closeModal = () => {
         setSelectedInstitution(null);
     };
+
+    // Exibe o formulário para confirmar a exclusão
+    const showDeleteForm = () => {
+        setConfirmDeleteForm(prev => !prev);
+    }
 
     return (
         <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-1">
@@ -137,8 +156,29 @@ function InstitutionSection() {
 
                             {/* Botão para o admin deletar a instituição */}
                             {location.pathname === '/admin' && (
-                                <Button variant="contained" color="error" startIcon={<DeleteIcon />}>Deletar</Button>
+                                <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={showDeleteForm}>Deletar</Button>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {confirmDeleteForm && (
+                <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+                    <div className='w-80 h-auto absolute top-1/3 flex flex-col gap-3 bg-white shadow-lg rounded-lg p-3 z-50'>
+                        <p>Tem certeza que quer deletar a instituição <strong>{selectedInstitution.name}</strong> do sistema? Essa ação não poderá ser desfeita</p>
+                        
+                        <hr />
+
+                        <div className='flex gap-2'>
+                            <Button variant='contained' color='success' onClick={handleDelete}>
+                                sim
+                            </Button>
+
+                            <Button variant='contained' color='error' onClick={showDeleteForm}>
+                                não
+                            </Button>
+
                         </div>
                     </div>
                 </div>

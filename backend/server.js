@@ -360,6 +360,62 @@ app.post("/doctor", upload.single('image'), async (req, res) => {
   }
 });
 
+// Requisição para deletar médico (e sua imagem)
+app.delete("/doctor/:id", async (req, res) => {
+  const doctor_id = req.params.id;
+
+  try {
+    // Busca o caminho da imagem do médico
+    const result = await db.query(
+      `SELECT doctors.image_path FROM doctors WHERE user_id = $1`,
+      [doctor_id]
+    );
+
+    const imagePath = result.rows[0]?.image_path;
+
+    // Deleta a imagem se existir
+    if (imagePath && fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    // Deleta o usuário (médico)
+    await db.query("DELETE FROM users WHERE id = $1", [doctor_id]);
+
+    return res.status(200).json({ message: "Médico deletado com sucesso" });
+  } catch (error) {
+    console.error("Erro ao deletar médico:", error);
+    res.status(500).json({ message: "Erro no servidor ao deletar médico" });
+  }
+});
+
+// Requisição para deletar instituição (e sua imagem)
+app.delete("/institution/:id", async (req, res) => {
+  const inst_id = req.params.id;
+
+  try {
+    // Busca o caminho da imagem da instituição
+    const result = await db.query(
+      `SELECT image_path FROM institutions WHERE id = $1`,
+      [inst_id]
+    );
+
+    const imagePath = result.rows[0]?.image_path;
+
+    // Deleta a imagem se existir
+    if (imagePath && fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    // Deleta a instituição
+    await db.query("DELETE FROM institutions WHERE id = $1", [inst_id]);
+
+    return res.status(200).json({ message: "Instituição deletada com sucesso" });
+  } catch (error) {
+    console.error("Erro ao deletar instituição:", error);
+    res.status(500).json({ message: "Erro no servidor ao deletar instituição" });
+  }
+});
+
 // Estratégia de autenticação local
 passport.use("local",
   new Strategy({ usernameField: "email" }, async (email, password, done) => {

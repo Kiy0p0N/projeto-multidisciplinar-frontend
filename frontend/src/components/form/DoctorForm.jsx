@@ -141,7 +141,8 @@ function DoctorForm() {
             });
 
             if (registerDoctor.status === 201) {
-                console.log("Médico registrado com sucesso");
+                alert("Médico registrado com sucesso");
+                window.location.reload(); // Força o refresh da página
             }
         }
     } catch (error) {

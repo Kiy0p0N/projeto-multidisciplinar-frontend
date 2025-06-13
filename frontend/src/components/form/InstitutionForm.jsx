@@ -78,6 +78,7 @@ function InstitutionForm() {
 
             if (response.status === 200) {
                 setSuccess(response.data.message);
+                window.location.reload(); // Força o refresh da página
             }
         } catch (error) {
             if (error.response) {

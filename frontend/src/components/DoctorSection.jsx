@@ -19,6 +19,7 @@ function DoctorSection() {
     const [selectedDoctor, setSelectedDoctor] = useState(null); // Médico selecionado para detalhes
     const [showAppointmentForm, setShowAppointmentForm] = useState(false); // Exibe ou esconde formulário
     const [searchQuery, setSearchQuery] = useState(''); // Texto da barra de pesquisa
+    const [confirmDeleteForm, setConfirmDeleteForm] = useState(false);
 
     const location = useLocation(); // Localização atual (rota)
 
@@ -57,10 +58,28 @@ function DoctorSection() {
         setShowAppointmentForm(false); // Oculta formulário ao trocar de médico
     };
 
+    // Função para o admin deletar um médico
+    const handleDelete = async () => {
+        try {
+            const deleteDoctor = await axios.delete(`http://localhost:3000/doctor/${selectedDoctor.id}`);
+
+            if (deleteDoctor.status === 200) {
+                window.location.reload(); // Força o refresh da página
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     // Fecha o modal de detalhes do médico
     const closeModal = () => {
         setSelectedDoctor(null);
     };
+
+    // Exibe o formulário para confirmar a exclusão
+    const showDeleteForm = () => {
+        setConfirmDeleteForm(prev => !prev);
+    }
 
     return (
         <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-1">
@@ -144,7 +163,12 @@ function DoctorSection() {
 
                             {/* Botão de deletar visível apenas no painel do admin */}
                             {location.pathname === '/admin' && (
-                                <Button variant="contained" color="error" startIcon={<DeleteIcon />}>
+                                <Button 
+                                    variant="contained" 
+                                    color="error" 
+                                    startIcon={<DeleteIcon />}
+                                    onClick={showDeleteForm}
+                                >
                                     Deletar
                                 </Button>
                             )}
@@ -170,6 +194,27 @@ function DoctorSection() {
                                     />
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {confirmDeleteForm && (
+                <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+                    <div className='w-80 h-auto absolute top-1/3 flex flex-col gap-3 bg-white shadow-lg rounded-lg p-3 z-50'>
+                        <p>Tem certeza que quer deletar o médico <strong>{selectedDoctor.user_name}</strong> do sistema? Essa ação não poderá ser desfeita</p>
+                        
+                        <hr />
+
+                        <div className='flex gap-2'>
+                            <Button variant='contained' color='success' onClick={handleDelete}>
+                                sim
+                            </Button>
+
+                            <Button variant='contained' color='error' onClick={showDeleteForm}>
+                                não
+                            </Button>
+
                         </div>
                     </div>
                 </div>

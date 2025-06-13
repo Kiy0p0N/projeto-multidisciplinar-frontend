@@ -50,5 +50,5 @@ CREATE TABLE doctors (
     image_path TEXT,
     user_id INTEGER UNIQUE NOT NULL,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_institution FOREIGN KEY (institution_id) REFERENCES institutions(id) ON DELETE SET NULL
+    CONSTRAINT fk_institution FOREIGN KEY (institution_id) REFERENCES institutions(id) ON DELETE CASCADE
 );

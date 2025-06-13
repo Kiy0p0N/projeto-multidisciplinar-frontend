@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Button } from '@mui/material';
 
 function AppointmentForm({ doctor, onClose }) {
     const [selectedDate, setSelectedDate] = useState(''); // Estado para armazenar a data selecionada pelo usuário
@@ -21,10 +22,10 @@ function AppointmentForm({ doctor, onClose }) {
     const generateAvailableDates = () => {
         const today = new Date();
         const dates = [];
-        const allowedDays = doctor.available_days.map(day => dayMap[day.toLowerCase()]); // converte para número
+        const allowedDays = doctor.available_days.map(day => dayMap[day.toLowerCase()]); // Converte para número
 
         // Verifica os próximos 60 dias, mas para no máximo 30 datas válidas
-        for (let i = 1; i <= 60; i++) {
+        for (let i = 0; i <= 60; i++) {
             const date = new Date();
             date.setDate(today.getDate() + i);
 
@@ -35,7 +36,7 @@ function AppointmentForm({ doctor, onClose }) {
             if (dates.length >= 30) break;
         }
 
-        setAvailableDates(dates); // atualiza estado
+        setAvailableDates(dates); // Atualiza estado
     };
 
     // Retorna o nome do dia da semana em português para uma determinada data
@@ -50,36 +51,48 @@ function AppointmentForm({ doctor, onClose }) {
 
     // Gera os horários disponíveis para uma data selecionada
     const generateAvailableTimes = (dateStr) => {
-        if (!dateStr) return;
+        if (!dateStr) return; // Se nenhuma data foi selecionada, não faz nada
 
-        // Corrige o formato da string para funcionar no Safari também
+        // Corrige o formato da string para funcionar corretamente em todos os navegadores
         const date = new Date(dateStr.replaceAll("-", "/"));
 
-        // Pega o nome do dia da semana correspondente à data
+        // Obtém o nome do dia da semana correspondente (ex: segunda, terça)
         const weekday = date.toLocaleDateString('pt-BR', { weekday: 'long' }).split('-', 1)[0];
 
-        // Acessa os horários disponíveis do médico para aquele dia
+        // Pega o horário de expediente do médico para o dia da semana
         const schedule = doctor.schedule[weekday];
-
-        if (!schedule) return;
+        if (!schedule) return; // Se o médico não atende nesse dia, sai da função
 
         const times = [];
+
+        // Converte os horários de início e fim para números
         const [startHour, startMin] = schedule.start.split(':').map(Number);
         const [endHour, endMin] = schedule.end.split(':').map(Number);
 
+        // Cria objetos Date para o horário inicial e final de atendimento
         let current = new Date(date);
         current.setHours(startHour, startMin, 0, 0);
 
         const end = new Date(date);
         end.setHours(endHour, endMin, 0, 0);
 
-        // Adiciona horários com intervalo de 30 minutos até o final do expediente
+        const now = new Date(); // Pega o horário atual
+
+        // Loop para adicionar horários de 30 em 30 minutos enquanto não chegar no fim do expediente
         while (current < end) {
-            times.push(current.toTimeString().slice(0, 5)); // formato HH:MM
-            current.setMinutes(current.getMinutes() + 30);
+            // Se for um dia futuro, adiciona todos os horários
+            // Se for hoje, só adiciona os horários que ainda não passaram
+            if (
+                date.toDateString() !== now.toDateString() || // data diferente de hoje
+                current > now // ou horário ainda futuro
+            ) {
+                times.push(current.toTimeString().slice(0, 5)); // Ex: '14:30'
+            }
+
+            current.setMinutes(current.getMinutes() + 30); // Avança 30 minutos
         }
 
-        setAvailableTimes(times);
+        setAvailableTimes(times); // Atualiza o estado com os horários disponíveis
     };
 
     // Executa apenas uma vez ao montar o componente
@@ -137,13 +150,14 @@ function AppointmentForm({ doctor, onClose }) {
             )}
 
             {/* Botão para confirmar agendamento, desativado até que ambos os campos sejam preenchidos */}
-            <button
-                type="submit"
+            <Button
+                type='submit'
+                variant='contained'
+                color='secondary'
                 disabled={!selectedDate || !selectedTime}
-                className="bg-indigo-600 text-white px-4 py-2 rounded disabled:opacity-50"
             >
-                Confirmar Agendamento
-            </button>
+                Realizar agendamento
+            </Button>
         </form>
     );
 }
