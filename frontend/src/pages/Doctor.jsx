@@ -9,6 +9,7 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import WorkIcon from "@mui/icons-material/Work";
 import axios from "axios";
 import PatientSection from "../components/PatientSection";
+import { apiUrl } from "../utils/constants";
 
 function Doctor() {
     const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ function Doctor() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/user", {
+                const response = await axios.get(`${apiUrl}/user`, {
                     withCredentials: true,
                 });
 
@@ -45,7 +46,7 @@ function Doctor() {
         if (user) {
             const fetchDoctor = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:3000/doctor/${user.id}`);
+                    const response = await axios.get(`${apiUrl}/doctor/${user.id}`);
                     if (response.status === 200 && response.data.doctor) {
                         setDoctor(response.data.doctor);
                     }
@@ -59,7 +60,7 @@ function Doctor() {
 
     const handleLogout = async () => {
         try {
-            const response = await axios.get("http://localhost:3000/logout", {
+            const response = await axios.get(`${apiUrl}/logout`, {
                 withCredentials: true,
             });
             if (response.status === 200) {

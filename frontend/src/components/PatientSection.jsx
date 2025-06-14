@@ -4,6 +4,7 @@ import axios from "axios";
 import SearchInput from "./input/SearchInput";
 import { IconButton } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import { apiUrl } from "../utils/constants";
 
 function PatientSection() {
     const [allPatients, setAllPatients] = useState([]);
@@ -15,7 +16,7 @@ function PatientSection() {
     useEffect(() => {
         const fetchPatients = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/patients");
+                const response = await axios.get(`${apiUrl}/patients`);
                 setAllPatients(response.data.patients);
                 setFilteredPatients(response.data.patients);
             } catch (error) {

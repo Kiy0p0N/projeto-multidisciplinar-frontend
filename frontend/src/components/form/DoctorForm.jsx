@@ -6,7 +6,7 @@ import ImgInput from "../input/ImgInput";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { Button, Checkbox } from "@mui/material";
-import { daysOfWeek } from "../../utils/constants"; // ['segunda', 'terça', ...]
+import { daysOfWeek, apiUrl } from "../../utils/constants"; // ['segunda', 'terça', ...]
 
 function DoctorForm() {
     const [institutions, setInstitution] = useState([]);
@@ -89,7 +89,7 @@ function DoctorForm() {
     useEffect(() => {
         const fetchInstitution = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/institutions");
+                const response = await axios.get(`${apiUrl}/institutions`);
                 setInstitution(response.data.institutions);
             } catch (error) {
                 if (error.response) return console.warn(error.response.data.message);
@@ -102,59 +102,59 @@ function DoctorForm() {
 
     // Função para enviar os dados do formulário
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    try {
-        const formData = new FormData();
+        try {
+            const formData = new FormData();
 
-        // Verifica se há imagem
-        const imgInput = document.getElementById("image");
-        if (imgInput?.files.length > 0) {
-            formData.append("image", imgInput.files[0]);
-        } else {
-            setError("Imagem obrigatória");
-            return;
-        }
+            // Verifica se há imagem
+            const imgInput = document.getElementById("image");
+            if (imgInput?.files.length > 0) {
+                formData.append("image", imgInput.files[0]);
+            } else {
+                setError("Imagem obrigatória");
+                return;
+            }
 
-        // Primeiro registra o usuário
-        const registerUser = await axios.post("http://localhost:3000/register-user", form);
-        if (registerUser.status === 201) {
-            const user = registerUser.data.user;
+            // Primeiro registra o usuário
+            const registerUser = await axios.post(`${apiUrl}/register-user`, form);
+            if (registerUser.status === 201) {
+                const user = registerUser.data.user;
 
-            // Adiciona campos ao FormData
-            Object.entries(form).forEach(([key, value]) => {
-                if (key === "schedule" || key === "availableDays") {
-                    formData.append(key, JSON.stringify(value)); // converte para JSON string
-                } else {
-                    formData.append(key, value);
+                // Adiciona campos ao FormData
+                Object.entries(form).forEach(([key, value]) => {
+                    if (key === "schedule" || key === "availableDays") {
+                        formData.append(key, JSON.stringify(value)); // converte para JSON string
+                    } else {
+                        formData.append(key, value);
+                    }
+                });
+
+                // Adiciona user_id separado (não vem no form original)
+                formData.append("user_id", user.id);
+
+                // Envia os dados do médico
+                const registerDoctor = await axios.post(`${apiUrl}/doctor`, formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+
+                if (registerDoctor.status === 201) {
+                    alert("Médico registrado com sucesso");
+                    window.location.reload(); // Força o refresh da página
                 }
-            });
-
-            // Adiciona user_id separado (não vem no form original)
-            formData.append("user_id", user.id);
-
-            // Envia os dados do médico
-            const registerDoctor = await axios.post("http://localhost:3000/doctor", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-
-            if (registerDoctor.status === 201) {
-                alert("Médico registrado com sucesso");
-                window.location.reload(); // Força o refresh da página
+            }
+        } catch (error) {
+            if (error.response) {
+                setError(error.response.data.message || "Erro ao enviar dados.");
+                console.warn("Erro do servidor:", error.response.data);
+            } else {
+                setError("Erro ao conectar ao servidor.");
+                console.error("Erro desconhecido:", error);
             }
         }
-    } catch (error) {
-        if (error.response) {
-            setError(error.response.data.message || "Erro ao enviar dados.");
-            console.warn("Erro do servidor:", error.response.data);
-        } else {
-            setError("Erro ao conectar ao servidor.");
-            console.error("Erro desconhecido:", error);
-        }
-    }
-};
+    };
 
 
     return (

@@ -7,6 +7,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from 'axios';
 
+import { apiUrl } from "../../utils/constants";
+
 function Header() {
     // Detecta a rota atual
     const location = useLocation();
@@ -21,7 +23,7 @@ function Header() {
     const handleSubmit = async () => {
         setLoading(true); // Impede cliques múltiplos
         try {
-            const response = await axios.get("http://localhost:3000/user", {
+            const response = await axios.get(`${apiUrl}/user`, {
                 withCredentials: true, // Garante que o cookie de sessão seja enviado
             });
 

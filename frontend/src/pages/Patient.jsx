@@ -8,6 +8,8 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import axios from "axios";
 import DoctorSection from "../components/DoctorSection";
 import InstitutionSection from "../components/InstitutionSection";
+import AppointmentSection from "../components/AppointmentSection";
+import { apiUrl } from "../utils/constants";
 
 function Patient() {
     const [user, setUser] = useState(null);
@@ -20,7 +22,7 @@ function Patient() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/user", {
+                const response = await axios.get(`${apiUrl}/user`, {
                     withCredentials: true,
                 });
 
@@ -44,7 +46,7 @@ function Patient() {
         if (user) {
             const fetchPatient = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:3000/patient/${user.id}`);
+                    const response = await axios.get(`${apiUrl}/patient/${user.id}`);
                     if (response.status === 200 && response.data.patient) {
                         setPatient(response.data.patient);
                     }
@@ -59,7 +61,7 @@ function Patient() {
     // Logout
     const handleLogout = async () => {
         try {
-            const response = await axios.get("http://localhost:3000/logout", {
+            const response = await axios.get(`${apiUrl}/logout`, {
                 withCredentials: true,
             });
             if (response.status === 200) {
@@ -112,10 +114,13 @@ function Patient() {
                 <section className="w-4/5 px-8">
                     <div className="grid grid-cols-2 gap-6">
                         {/* Médicos */}
-                        <DoctorSection />
+                        <DoctorSection patient={patient}/>
 
                         {/* Instituições */}
                         <InstitutionSection />
+
+                        {/* Agendamentos */}
+                        <AppointmentSection patient={patient}/>
                     </div>
                 </section>
             </main>

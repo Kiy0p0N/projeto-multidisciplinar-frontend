@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 import { Button, Checkbox } from "@mui/material";
+import { apiUrl } from "../../utils/constants";
 
 function UserForm() {
     const [error, setError] = useState('');
@@ -52,8 +53,7 @@ function UserForm() {
 
         if (isFormValid) {
             try {
-                const registerUser = await axios.post("http://localhost:3000/register-user", 
-                    form,
+                const registerUser = await axios.post(`${apiUrl}/register-user`, form,
                     { withCredentials: true }
                 );
 
@@ -67,7 +67,7 @@ function UserForm() {
                         user_id: user.id
                     };
 
-                    const registerPatient = await axios.post("http://localhost:3000/patient", patientData, {
+                    const registerPatient = await axios.post(`${apiUrl}/patient`, patientData, {
                         withCredentials: true
                     });
 

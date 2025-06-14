@@ -16,6 +16,7 @@ import PatientSection from "../components/PatientSection";
 import InstitutionSection from "../components/InstitutionSection";
 import DoctorForm from "../components/form/DoctorForm";
 import DoctorSection from "../components/DoctorSection";
+import { apiUrl } from "../utils/constants";
 
 function Admin() {
     const [admin, setAdmin] = useState(null);
@@ -28,7 +29,7 @@ function Admin() {
     useEffect(() => {
         const fetchAdmin = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/user", {
+                const response = await axios.get(`${apiUrl}/user`, {
                     withCredentials: true,
                 });
 
@@ -51,7 +52,7 @@ function Admin() {
     // Faz logout e redireciona para a página inicial
     const handleLogout = async () => {
         try {
-            const response = await axios.get("http://localhost:3000/logout", {
+            const response = await axios.get(`${apiUrl}/logout`, {
                 withCredentials: true,
             });
 

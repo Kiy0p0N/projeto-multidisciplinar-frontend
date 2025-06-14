@@ -6,6 +6,7 @@ import { Button, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useLocation } from 'react-router-dom';
+import { apiUrl } from '../utils/constants';
 
 function InstitutionSection() {
     const [allInstitutions, setAllInstitutions] = useState([]);
@@ -20,7 +21,7 @@ function InstitutionSection() {
     useEffect(() => {
         const fetchInstitutions = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/institutions");
+                const response = await axios.get(`${apiUrl}/institutions`);
                 setAllInstitutions(response.data.institutions);
                 setFilteredInstitutions(response.data.institutions);
             } catch (error) {
@@ -53,7 +54,7 @@ function InstitutionSection() {
     // Função para o admin deletar uma instituição
     const handleDelete = async () => {
         try {
-            const deleteDoctor = await axios.delete(`http://localhost:3000/institution/${selectedInstitution.id}`);
+            const deleteDoctor = await axios.delete(`${apiUrl}/institution/${selectedInstitution.id}`);
 
             if (deleteDoctor.status === 200) {
                 window.location.reload(); // Força o refresh da página

@@ -183,7 +183,7 @@ Observação: atualmente só funciona localmente.
 - [x] Permite sessões
 - [X] Registro de instituições de saúde
 - [X] Registro de médicos
-- [ ] Agendamentos
+- [X] Agendamentos
 
 </div>
 

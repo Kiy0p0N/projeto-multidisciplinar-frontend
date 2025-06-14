@@ -52,3 +52,31 @@ CREATE TABLE doctors (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_institution FOREIGN KEY (institution_id) REFERENCES institutions(id) ON DELETE CASCADE
 );
+
+-- Tabela com os agendamentos
+CREATE TABLE appointments (
+    id SERIAL PRIMARY KEY,
+    patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+    doctor_id INTEGER NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
+    institution_id INTEGER NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
+    status VARCHAR(50) DEFAULT 'agendada', -- Ex.: agendada, concluída, cancelada
+    notes TEXT, -- Anotações opcionais sobre a consulta
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- O campo updated_at se atualiza automaticamente sempre que a linha for modificada
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER update_appointments_updated_at
+BEFORE UPDATE ON appointments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

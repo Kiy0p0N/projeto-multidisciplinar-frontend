@@ -12,7 +12,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useLocation } from 'react-router-dom'; // Hook para saber qual é a rota atual
 import AppointmentForm from './form/AppointmentForm'; // Componente de agendamento
 
-function DoctorSection() {
+import { apiUrl } from '../utils/constants';
+
+function DoctorSection({patient}) {
     // Estados para controle de dados e interações
     const [allDoctors, setAllDoctors] = useState([]); // Todos os médicos recebidos da API
     const [filteredDoctors, setFilteredDoctors] = useState([]); // Médicos filtrados pela busca
@@ -27,7 +29,7 @@ function DoctorSection() {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await axios.get("http://localhost:3000/doctors");
+                const response = await axios.get(`${apiUrl}/doctors`);
                 setAllDoctors(response.data.doctors); // Salva todos os médicos
                 setFilteredDoctors(response.data.doctors); // Inicialmente, lista completa é mostrada
             } catch (error) {
@@ -61,7 +63,7 @@ function DoctorSection() {
     // Função para o admin deletar um médico
     const handleDelete = async () => {
         try {
-            const deleteDoctor = await axios.delete(`http://localhost:3000/doctor/${selectedDoctor.id}`);
+            const deleteDoctor = await axios.delete(`${apiUrl}/doctor/${selectedDoctor.id}`);
 
             if (deleteDoctor.status === 200) {
                 window.location.reload(); // Força o refresh da página
@@ -189,7 +191,8 @@ function DoctorSection() {
                             {showAppointmentForm && (
                                 <div className="mt-4">
                                     <AppointmentForm 
-                                        doctor={selectedDoctor} 
+                                        doctor={selectedDoctor}
+                                        patient_id={patient.id}
                                         onClose={() => setShowAppointmentForm(false)} 
                                     />
                                 </div>

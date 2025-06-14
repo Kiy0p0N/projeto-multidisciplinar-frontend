@@ -165,11 +165,12 @@ app.get("/doctors", async (req, res) => {
   try {
     const response = await db.query(`
       SELECT 
-        users.id, 
         users.name AS user_name, 
-        users.email AS user_email, 
+        users.email AS user_email,
+        doctors.id,
         doctors.phone AS doctor_phone, 
         doctors.specialty,
+        doctors.institution_id,
         doctors.image_path,
         doctors.available_days,
         doctors.schedule,
@@ -184,6 +185,38 @@ app.get("/doctors", async (req, res) => {
     console.error("Erro na busca:", error);
     res.status(500).json({ message: "Erro ao buscar os médicos:", error });
   }
+});
+
+// Buscar agendamentos de um paciente específico
+app.get("/appointments/patient/:id", async (req, res) => {
+    const patient_id = req.params.id; // ID do paciente passado na URL
+
+    try {
+        // Faz a consulta no banco buscando os agendamentos
+        const result = await db.query(
+            `SELECT 
+              appointments.id,
+              appointments.appointment_date,
+              appointments.appointment_time,
+              users.name AS doctor_name,
+              institutions.name AS institution_name
+            FROM appointments
+            INNER JOIN doctors ON appointments.doctor_id = doctors.id
+            INNER JOIN users ON doctors.user_id = users.id
+            INNER JOIN institutions ON appointments.institution_id = institutions.id
+            WHERE appointments.patient_id = $1
+            ORDER BY appointments.appointment_date ASC, appointments.appointment_time ASC`,
+            [patient_id] // parâmetro para evitar SQL Injection
+        );
+
+        // Retorna os dados encontrados
+        return res.status(200).json({appointments: result.rows});
+    } catch (error) {
+        console.error("Erro ao buscar agendamentos:", error);
+        return res.status(500).json({
+            message: "Erro no servidor ao buscar agendamentos"
+        });
+    }
 });
 
 // Login
@@ -357,6 +390,25 @@ app.post("/doctor", upload.single('image'), async (req, res) => {
   } catch (error) {
     console.error("Erro ao registrar médico:", error);
     res.status(500).json({ message: "Erro no servidor", error });
+  }
+});
+
+// Agendar uma consulta
+app.post("/appointments", async (req, res) => {
+  const { patient_id, doctor_id, institution_id, date, time } = req.body;
+
+  console.log(req.body);
+
+  try {
+    await db.query(
+      "INSERT INTO appointments (patient_id, doctor_id, institution_id, appointment_date, appointment_time, status) VALUES ($1, $2, $3, $4, $5, $6)",
+      [patient_id, doctor_id, institution_id, date, time, 'agendada']
+    );
+
+    return res.status(201).json({ message: "Consulta agendada com sucesso" });
+  } catch (error) {
+    console.error('Erro ao agendar consulta:', error);
+    return res.status(500).json({ message: "Erro no servidor ao agendar consulta" });
   }
 });
 

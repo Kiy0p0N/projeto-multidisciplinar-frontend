@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@mui/material';
+import { apiUrl } from '../../utils/constants';
+import axios from 'axios'; // Adiciona o axios para facilitar as requisições
 
-function AppointmentForm({ doctor, onClose }) {
+function AppointmentForm({ patient_id, doctor, onClose }) {
     const [selectedDate, setSelectedDate] = useState(''); // Estado para armazenar a data selecionada pelo usuário
     const [availableDates, setAvailableDates] = useState([]); // Lista de datas disponíveis para agendamento
     const [availableTimes, setAvailableTimes] = useState([]); // Lista de horários disponíveis para o dia selecionado
@@ -105,11 +107,36 @@ function AppointmentForm({ doctor, onClose }) {
         generateAvailableTimes(selectedDate);
     }, [selectedDate]);
 
-    // Envia os dados simulando o agendamento
-    const handleSubmit = (e) => {
+    // Envia os dados para o backend, criando o agendamento
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert(`Consulta marcada com ${doctor.user_name} em ${selectedDate} às ${selectedTime}`);
-        onClose(); // fecha o formulário
+
+        try {
+            // Monta os dados para enviar ao backend
+            const appointmentData = {
+                doctor_id: doctor.id,                  // ID do médico
+                patient_id: patient_id,                // ID do paciente
+                institution_id: doctor.institution_id, // Id da instituição
+                date: selectedDate,                    // Data selecionada (YYYY-MM-DD)
+                time: selectedTime                     // Horário selecionado (HH:MM)
+            };
+
+            console.log(appointmentData)
+
+            // Faz o POST para o backend na rota de agendamentos
+            const response = await axios.post(`${apiUrl}/appointments`, appointmentData);
+
+            // Se der certo, mostra mensagem de sucesso
+            if (response.status === 201) {
+                alert(response.data.message);
+                window.location.reload(); // Força o refresh da página
+
+            }
+        } catch (error) {
+            // Caso ocorra algum erro, exibe a mensagem
+            console.error(error);
+            alert(error.response?.data?.message || 'Erro ao agendar a consulta');
+        }
     };
 
     return (

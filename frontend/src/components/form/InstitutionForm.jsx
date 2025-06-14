@@ -4,6 +4,7 @@ import NumbersInput from "../input/NumbersInput";
 import { Button } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
+import { apiUrl } from "../../utils/constants";
 
 function InstitutionForm() {
     // Estado para armazenar o preview da imagem selecionada
@@ -70,7 +71,7 @@ function InstitutionForm() {
                 return;
             }
 
-            const response = await axios.post("http://localhost:3000/institution", formData, {
+            const response = await axios.post(`${apiUrl}/institution`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

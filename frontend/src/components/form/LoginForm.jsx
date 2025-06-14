@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Button } from '@mui/material';
 import TextInput from '../input/TextInput';
 import PasswordInput from '../input/PasswordInput';
+import { apiUrl } from '../../utils/constants';
 
 function LoginForm() {
     const [form, setForm] = useState({
@@ -34,9 +35,7 @@ function LoginForm() {
         if (!isFormValid) return;
 
         try {
-            const response = await axios.post(
-                "http://localhost:3000/login",
-                form,
+            const response = await axios.post(`${apiUrl}/login`, form,
                 {
                     withCredentials: true // Garante que o cookie de sessão seja armazenado
                 }
