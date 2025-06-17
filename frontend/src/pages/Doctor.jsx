@@ -9,6 +9,7 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import WorkIcon from "@mui/icons-material/Work";
 import axios from "axios";
 import PatientSection from "../components/PatientSection";
+import AppointmentSection from "../components/AppointmentSection";
 import { apiUrl } from "../utils/constants";
 
 function Doctor() {
@@ -114,6 +115,9 @@ function Doctor() {
                     <div className="grid grid-cols-2 gap-6">
                         {/* Pacientes e agendamentos */}
                         <PatientSection doctorId={doctor.id} />
+
+                        {/* Consultas agendadas */}
+                        <AppointmentSection user={user} />
                     </div>
                 </section>
             </main>

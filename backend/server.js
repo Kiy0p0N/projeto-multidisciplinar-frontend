@@ -187,30 +187,61 @@ app.get("/doctors", async (req, res) => {
   }
 });
 
-// Buscar agendamentos de um paciente específico
-app.get("/appointments/patient/:id", async (req, res) => {
-    const patient_id = req.params.id; // ID do paciente passado na URL
+// Buscar horários ocupados de um médico em uma data específica
+app.get("/appointments/occupied/:id", async (req, res) => {
+    const doctor_id = req.params.id;
+
+    try {
+        const result = await db.query(
+            `SELECT appointment_time, appointment_date
+            FROM appointments
+            WHERE doctor_id = $1 
+            AND status != 'cancelled'`, // Exclui os cancelados
+            [doctor_id]
+        );
+
+        const occupiedTimes = result.rows;
+
+        return res.status(200).json({ occupiedTimes });
+    } catch (error) {
+        console.error("Erro ao buscar horários ocupados:", error);
+        return res.status(500).json({
+            message: "Erro no servidor ao buscar horários ocupados"
+        });
+    }
+});
+
+// Buscar agendamentos de um usuário (paciente ou médico)
+app.get("/appointments/user/:id", async (req, res) => {
+    const user_id = req.params.id; // ID do usuário (paciente ou médico)
 
     try {
         // Faz a consulta no banco buscando os agendamentos
         const result = await db.query(
             `SELECT 
-              appointments.id,
-              appointments.appointment_date,
-              appointments.appointment_time,
-              users.name AS doctor_name,
-              institutions.name AS institution_name
+                appointments.id,
+                appointments.appointment_date,
+                appointments.appointment_time,
+                patient_users.name AS patient_name,
+                doctor_users.name AS doctor_name,
+                institutions.name AS institution_name
             FROM appointments
+            INNER JOIN patients ON appointments.patient_id = patients.id
+            INNER JOIN users AS patient_users ON patients.user_id = patient_users.id
+
             INNER JOIN doctors ON appointments.doctor_id = doctors.id
-            INNER JOIN users ON doctors.user_id = users.id
+            INNER JOIN users AS doctor_users ON doctors.user_id = doctor_users.id
+
             INNER JOIN institutions ON appointments.institution_id = institutions.id
-            WHERE appointments.patient_id = $1
+
+            WHERE patients.user_id = $1 OR doctors.user_id = $1
+
             ORDER BY appointments.appointment_date ASC, appointments.appointment_time ASC`,
-            [patient_id] // parâmetro para evitar SQL Injection
+            [user_id] // parâmetro para evitar SQL Injection
         );
 
         // Retorna os dados encontrados
-        return res.status(200).json({appointments: result.rows});
+        return res.status(200).json({ appointments: result.rows });
     } catch (error) {
         console.error("Erro ao buscar agendamentos:", error);
         return res.status(500).json({

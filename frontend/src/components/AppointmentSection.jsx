@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { apiUrl } from '../utils/constants';
 
@@ -8,27 +9,28 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-function AppointmentSection({ patient }) {
+function AppointmentSection({ user }) {
     const [appointments, setAppointments] = useState([]);
-    const [error, setError] = useState(null);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [confirmDeleteForm, setConfirmDeleteForm] = useState(false);
+
+    const location = useLocation();
 
     useEffect(() => {
         const fetchAppointments = async () => {
             try {
-                const response = await axios.get(`${apiUrl}/appointments/patient/${patient.id}`);
+                const response = await axios.get(`${apiUrl}/appointments/user/${user.id}`);
                 if (response.status === 200) {
                     setAppointments(response.data.appointments);
                 }
             } catch (error) {
                 console.error('Erro ao buscar agendamentos:', error);
-                setError('Erro ao carregar agendamentos.');
             }
         };
 
-        if (patient) fetchAppointments();
-    }, [patient]);
+        if (user) fetchAppointments();
+    }, [user]);
+
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -77,7 +79,7 @@ function AppointmentSection({ patient }) {
                         >
                             <div className="flex flex-col">
                                 <p className="text-base font-semibold text-gray-800">
-                                    {appointment.doctor_name}
+                                    {location.pathname === '/patient' ? appointment.doctor_name : appointment.patient_name}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     {appointment.institution_name}
@@ -113,7 +115,7 @@ function AppointmentSection({ patient }) {
                         <div className="flex flex-col items-center bg-indigo-600 pb-6 pt-10 relative">
                             <CalendarMonthIcon className="text-white" fontSize="large" />
                             <h2 className="text-white text-lg font-semibold mt-3">
-                                {selectedAppointment.doctor_name}
+                                {location.pathname === '/patient' ? selectedAppointment.doctor_name : selectedAppointment.patient_name}
                             </h2>
                             <p className="text-indigo-100 text-sm">
                                 {selectedAppointment.institution_name}
@@ -124,7 +126,11 @@ function AppointmentSection({ patient }) {
                         <div className="p-6 space-y-3 text-gray-800 text-sm">
                             <p><strong>Data:</strong> {formatDate(selectedAppointment.appointment_date)}</p>
                             <p><strong>Horário:</strong> {selectedAppointment.appointment_time}</p>
-                            <p><strong>Médico:</strong> {selectedAppointment.doctor_name}</p>
+                            {location.pathname === '/patient' ? (
+                                <p><strong>Médico:</strong> {selectedAppointment.doctor_name}</p> // Caso o observador seja o paciente
+                            ) : (
+                                <p><strong>Paciente:</strong> {selectedAppointment.patient_name}</p> // Caso seja o médico
+                            )}
                             <p><strong>Instituição:</strong> {selectedAppointment.institution_name}</p>
 
                             <Button 

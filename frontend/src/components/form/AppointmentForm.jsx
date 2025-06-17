@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@mui/material';
 import { apiUrl } from '../../utils/constants';
-import axios from 'axios'; // Adiciona o axios para facilitar as requisições
+import axios from 'axios';
 
-function AppointmentForm({ patient_id, doctor, onClose }) {
+function AppointmentForm({ patient_id, doctor }) {
     const [selectedDate, setSelectedDate] = useState(''); // Estado para armazenar a data selecionada pelo usuário
     const [availableDates, setAvailableDates] = useState([]); // Lista de datas disponíveis para agendamento
     const [availableTimes, setAvailableTimes] = useState([]); // Lista de horários disponíveis para o dia selecionado
@@ -51,50 +51,68 @@ function AppointmentForm({ patient_id, doctor, onClose }) {
         return date.toISOString().split('T')[0];
     };
 
+    // Pega os horários em que já há atendimentos marcados
+    const fetchOccupiedAppointments = async () => {
+        try {
+            const response = await axios.get(`${apiUrl}/appointments/occupied/${doctor.id}`);
+            const occupiedTimes = response.data.occupiedTimes;
+
+            // Filtra os horários para a data selecionada
+            const times = occupiedTimes
+                .filter(el => {
+                    const formatDate = new Date(el.appointment_date).toISOString().split('T')[0];
+                    return formatDate === selectedDate;
+                })
+                .map(el => el.appointment_time.slice(0, 5)); // <-- aqui corta os segundos, fica '15:00'
+
+            return times;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
+    };
+
     // Gera os horários disponíveis para uma data selecionada
-    const generateAvailableTimes = (dateStr) => {
-        if (!dateStr) return; // Se nenhuma data foi selecionada, não faz nada
+    const generateAvailableTimes = async (dateStr) => {
+        if (!dateStr) return;
 
-        // Corrige o formato da string para funcionar corretamente em todos os navegadores
         const date = new Date(dateStr.replaceAll("-", "/"));
-
-        // Obtém o nome do dia da semana correspondente (ex: segunda, terça)
         const weekday = date.toLocaleDateString('pt-BR', { weekday: 'long' }).split('-', 1)[0];
 
-        // Pega o horário de expediente do médico para o dia da semana
         const schedule = doctor.schedule[weekday];
-        if (!schedule) return; // Se o médico não atende nesse dia, sai da função
+        if (!schedule) return;
 
         const times = [];
 
-        // Converte os horários de início e fim para números
         const [startHour, startMin] = schedule.start.split(':').map(Number);
         const [endHour, endMin] = schedule.end.split(':').map(Number);
 
-        // Cria objetos Date para o horário inicial e final de atendimento
         let current = new Date(date);
         current.setHours(startHour, startMin, 0, 0);
 
         const end = new Date(date);
         end.setHours(endHour, endMin, 0, 0);
 
-        const now = new Date(); // Pega o horário atual
+        const now = new Date();
 
-        // Loop para adicionar horários de 30 em 30 minutos enquanto não chegar no fim do expediente
         while (current < end) {
-            // Se for um dia futuro, adiciona todos os horários
-            // Se for hoje, só adiciona os horários que ainda não passaram
             if (
-                date.toDateString() !== now.toDateString() || // data diferente de hoje
-                current > now // ou horário ainda futuro
+                date.toDateString() !== now.toDateString() ||
+                current > now
             ) {
-                times.push(current.toTimeString().slice(0, 5)); // Ex: '14:30'
+                times.push(current.toTimeString().slice(0, 5));
             }
-
-            current.setMinutes(current.getMinutes() + 30); // Avança 30 minutos
+            current.setMinutes(current.getMinutes() + 30);
         }
 
-        setAvailableTimes(times); // Atualiza o estado com os horários disponíveis
+        // Filtra os horários ocupados
+        const occupied = await fetchOccupiedAppointments();
+        const filteredTimes = times.filter(time => !occupied.includes(time));
+
+        console.log(occupied)
+        console.log(filteredTimes)
+
+        setAvailableTimes(filteredTimes);
     };
 
     // Executa apenas uma vez ao montar o componente

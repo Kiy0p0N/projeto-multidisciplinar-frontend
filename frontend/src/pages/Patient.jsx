@@ -120,7 +120,7 @@ function Patient() {
                         <InstitutionSection />
 
                         {/* Agendamentos */}
-                        <AppointmentSection patient={patient}/>
+                        <AppointmentSection user={user}/>
                     </div>
                 </section>
             </main>
