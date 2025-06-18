@@ -1,9 +1,10 @@
-function SectionLink(props) {
+function SectionLink({text, href, onClick}) {
     return (
-        <a href={props.href}
+        <a href={href}
+            onClick={onClick}
             className="text-lg font-medium font-sans text-white duration-200 hover:text-blue-400"
         >
-            {props.text}
+            {text}
         </a>
     );
 }

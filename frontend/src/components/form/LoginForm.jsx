@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-
 import axios from 'axios';
 
 import { Button } from '@mui/material';
@@ -9,14 +8,17 @@ import PasswordInput from '../input/PasswordInput';
 import { apiUrl } from '../../utils/constants';
 
 function LoginForm() {
+    // Estado do formulário: email e senha
     const [form, setForm] = useState({
         email: '',
         password: ''
     });
-    const [error, setError] = useState(''); // Armazena mensagens de erro
+
+    // Armazena mensagens de erro (ex: usuário inválido)
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // Atualiza o estado do formulário a cada digitação
+    // Atualiza os campos do formulário
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({
@@ -25,26 +27,24 @@ function LoginForm() {
         }));
     };
 
-    // Verifica se o formulário está preenchido
+    // Verifica se os campos obrigatórios foram preenchidos
     const isFormValid = form.email.trim() !== '' && form.password.trim() !== '';
 
-    // Submete o formulário
+    // Submete o formulário para autenticação
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!isFormValid) return;
 
         try {
-            const response = await axios.post(`${apiUrl}/login`, form,
-                {
-                    withCredentials: true // Garante que o cookie de sessão seja armazenado
-                }
-            );
+            const response = await axios.post(`${apiUrl}/login`, form, {
+                withCredentials: true // Garante que o cookie de sessão seja armazenado
+            });
 
             if (response.status === 200) {
                 const user = response.data.user;
 
-                // Redireciona com base no tipo de usuário
+                // Redireciona conforme o tipo de usuário
                 if (user?.type === "admin" || user?.type === "doctor" || user?.type === "patient") {
                     navigate(`/${user.type}`);
                 } else {
@@ -53,7 +53,7 @@ function LoginForm() {
             }
 
         } catch (error) {
-            // Tratamento de erro vindo do servidor
+            // Exibe erros específicos ou genéricos
             if (error.response) {
                 setError(error.response.data.message || "Erro ao fazer login.");
                 console.warn("Erro do servidor:", error.response.data);
@@ -65,14 +65,11 @@ function LoginForm() {
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="form shadow-lg"
-        >
-            {/* Exibição de erros, se houver */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Exibe erro, se houver */}
             {error && <p className="text-center text-red-500">{error}</p>}
 
-            {/* Campo de e-mail */}
+            {/* Campo: E-mail */}
             <TextInput 
                 htmlFor="email"
                 label="Email"
@@ -83,7 +80,7 @@ function LoginForm() {
                 onChange={handleChange}
             />
 
-            {/* Campo de senha */}
+            {/* Campo: Senha */}
             <PasswordInput
                 htmlFor="password"
                 label="Senha"
@@ -94,7 +91,7 @@ function LoginForm() {
                 onChange={handleChange}
             />
 
-            {/* Botão de login */}
+            {/* Botão: Enviar */}
             <Button 
                 type="submit" 
                 variant="contained" 
@@ -104,15 +101,13 @@ function LoginForm() {
                 Entrar
             </Button>
 
-            <hr />
+            {/* Para ter um espaçamento entre o botão de enviar e o link de cadastro */}
+            <div></div>
 
-            {/* Link para página de cadastro */}
+            {/* Link: Cadastro */}
             <p className="text-center text-sm">
                 Não tem conta?{" "}
-                <Link 
-                    to="/register" 
-                    className="text-blue-600 hover:underline"
-                >
+                <Link to="/register" className="text-blue-600 hover:underline">
                     Cadastre-se
                 </Link>
             </p>

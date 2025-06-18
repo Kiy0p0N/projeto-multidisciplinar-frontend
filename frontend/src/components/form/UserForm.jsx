@@ -9,7 +9,10 @@ import { Button, Checkbox } from "@mui/material";
 import { apiUrl } from "../../utils/constants";
 
 function UserForm() {
+    // Armazena erros de validação ou requisição
     const [error, setError] = useState('');
+
+    // Estado do formulário do usuário
     const [form, setForm] = useState({
         name: '',
         email: '',
@@ -25,7 +28,7 @@ function UserForm() {
 
     const navigate = useNavigate();
 
-    // Atualiza os campos do formulário
+    // Atualiza dinamicamente os campos do formulário
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm((prev) => ({
@@ -34,7 +37,7 @@ function UserForm() {
         }));
     };
 
-    // Verifica se todas as condições estão preenchidas corretamente
+    // Validação básica: todos campos devem estar preenchidos, senha igual e termos aceitos
     const isFormValid =
         form.name.trim() &&
         form.email.trim() &&
@@ -47,26 +50,27 @@ function UserForm() {
         form.password === form.confirmPassword &&
         form.termsAccepted;
 
-    // Submete o formulário apenas se estiver válido
+    // Submissão do formulário
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (isFormValid) {
             try {
-                const registerUser = await axios.post(`${apiUrl}/register-user`, form,
-                    { withCredentials: true }
-                );
+                // Envia dados para criação de usuário
+                const registerUser = await axios.post(`${apiUrl}/register-user`, form, {
+                    withCredentials: true
+                });
 
                 if (registerUser.status === 201) {
                     const user = registerUser.data.user;
-                    console.log("Novo ID do usuário:", user.id);
 
-                    // Crie um novo objeto com todos os dados + user_id
+                    // Cria dados do paciente com ID do usuário
                     const patientData = {
                         ...form,
                         user_id: user.id
                     };
 
+                    // Registra paciente no sistema
                     const registerPatient = await axios.post(`${apiUrl}/patient`, patientData, {
                         withCredentials: true
                     });
@@ -74,7 +78,7 @@ function UserForm() {
                     if (registerPatient.status === 201) {
                         navigate("/patient");
                     }
-                } 
+                }
             } catch (error) {
                 if (error.response) {
                     setError(error.response.data.message);
@@ -86,40 +90,35 @@ function UserForm() {
         }
     };
 
-
     return (
-        <form 
-            onSubmit={handleSubmit} 
-            className="form shadow-lg"
-        >
-            
-            {/* Exibição de erros, se houver */}
+        <form onSubmit={handleSubmit} className="form shadow-lg space-y-6">
+            {/* Mensagem de erro exibida dinamicamente */}
             {error && <p className="text-center text-red-500">{error}</p>}
 
-            {/* Campo de nome completo */}
-            <TextInput 
+            {/* Nome completo */}
+            <TextInput
                 htmlFor="name"
                 label="Nome"
                 id="name"
                 name="name"
-                required={true}
+                required
                 value={form.name}
                 onChange={handleChange}
             />
 
-            {/* Campo de email */}
-            <TextInput 
+            {/* Email */}
+            <TextInput
                 htmlFor="email"
                 label="Email"
                 id="email"
                 name="email"
                 type="email"
-                required={true}
+                required
                 value={form.email}
                 onChange={handleChange}
             />
 
-            {/* Campo para informar o cpf */}
+            {/* CPF com formatação */}
             <NumbersInput
                 htmlFor="cpf"
                 label="CPF"
@@ -133,7 +132,7 @@ function UserForm() {
                 required
             />
 
-            {/* Campo para informar o telefone */}
+            {/* Telefone com máscara */}
             <NumbersInput
                 htmlFor="phone"
                 label="Telefone"
@@ -147,7 +146,7 @@ function UserForm() {
                 required
             />
 
-            {/* Campo para selecionar a data de aniversário */}
+            {/* Data de nascimento */}
             <TextInput
                 htmlFor="birth_date"
                 label="Data de nascimento"
@@ -159,7 +158,7 @@ function UserForm() {
                 required
             />
 
-            {/* Campo para selecionar o gênero */}
+            {/* Gênero (select) */}
             <SelectInput
                 htmlFor="gender"
                 label="Gênero"
@@ -175,52 +174,52 @@ function UserForm() {
                 ]}
             />
 
-            {/* Campo de senha com visualização opcional */}
+            {/* Senha */}
             <PasswordInput
                 htmlFor="password"
                 label="Senha"
                 id="password"
                 name="password"
-                required={true}
+                required
                 value={form.password}
                 onChange={handleChange}
             />
 
-            {/* Campo para confirmar senha */}
+            {/* Confirmação de senha */}
             <PasswordInput
                 htmlFor="confirmPassword"
                 label="Confirme a senha"
                 id="confirmPassword"
                 name="confirmPassword"
-                required={true}
+                required
                 value={form.confirmPassword}
                 onChange={handleChange}
                 compareTo={form.password}
                 errorMessage="As senhas devem ser iguais."
             />
 
-            {/* Checkbox dos termos de uso */}
-            <div className="flex items-center">
+            {/* Termos de uso */}
+            <div className="flex items-center text-sm">
                 <Checkbox
                     checked={form.termsAccepted}
                     onChange={handleChange}
                     name="termsAccepted"
                     id="termsAccepted"
                 />
-                <label htmlFor="termsAccepted">
+                <label htmlFor="termsAccepted" className="text-gray-700">
                     Aceite os{' '}
-                    <span className="text-blue-500 cursor-pointer hover:underline">
-                        <Link to="/terms">Termos de uso</Link>
-                    </span>
+                    <Link to="/terms" className="text-blue-600 hover:underline">
+                        termos de uso
+                    </Link>
                 </label>
             </div>
 
-            {/* Botão de envio, só habilitado quando o formulário é válido */}
+            {/* Botão enviar */}
             <Button type="submit" variant="contained" className="w-full" disabled={!isFormValid}>
                 Registrar-se
             </Button>
         </form>
-    )
+    );
 }
 
 export default UserForm;

@@ -1,9 +1,12 @@
+// Importa layout reutilizável e formulário de cadastro
 import UserForm from '../components/form/UserForm';
 import Form from '../components/form/Form';
 
 function RegisterUser() {
     return (
-        <main className="container justify-center items-center py-24 bg-zinc-400/80">
+        // Estrutura centralizada com fundo translúcido
+        <main className="flex justify-center items-center min-h-screen bg-blue-950">
+            {/* Reaproveita o componente de layout com título e formulário */}
             <Form
                 title='Registre-se'
                 form={<UserForm />}
