@@ -1,15 +1,24 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@mui/material";
+
+// Ícones
 import LogoutIcon from "@mui/icons-material/Logout";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PhoneIcon from "@mui/icons-material/Phone";
 import BadgeIcon from "@mui/icons-material/Badge";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import WorkIcon from "@mui/icons-material/Work";
+import PeopleIcon from "@mui/icons-material/People";
+import EventIcon from "@mui/icons-material/Event";
+
 import axios from "axios";
+
+import SidebarMobile from "../components/SidebarMobile";
+
 import PatientSection from "../components/PatientSection";
 import AppointmentSection from "../components/AppointmentSection";
+
 import { apiUrl } from "../utils/constants";
 
 function Doctor() {
@@ -59,6 +68,7 @@ function Doctor() {
         }
     }, [user]);
 
+    // Logout
     const handleLogout = async () => {
         try {
             const response = await axios.get(`${apiUrl}/logout`, {
@@ -72,32 +82,40 @@ function Doctor() {
         }
     };
 
-    const calculateAge = (birthDate) => {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        return age;
-    };
-
+    // Renderização principal
     if (user && doctor) {
         return (
-            <main className="w-full min-h-dvh flex py-24 bg-gray-100 relative">
-                {/* Dados do médico */}
-                <aside className="w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
-                    <h2 className="text-lg font-semibold text-blue-700 mb-4 text-center">Seus dados</h2>
+            <main className="w-full min-h-dvh flex flex-col md:flex-row py-24 px-4 md:px-8 bg-gray-100 gap-6">
+
+                {/* Sidebar Mobile */}
+                <SidebarMobile
+                    infoContent={
+                        <div className="text-sm text-gray-800 space-y-2">
+                            <p><strong>Nome:</strong> {user.name}</p>
+                            <p><strong>ID:</strong> {user.id}</p>
+                            <p><strong>CPF:</strong> {doctor.cpf}</p>
+                            <p><strong>Gênero:</strong> {doctor.gender}</p>
+                            <p><strong>Telefone:</strong> {doctor.phone}</p>
+                            <p><strong>Instituição:</strong> {doctor.institution_name || "—"}</p>
+                            <p><strong>Especialidade:</strong> {doctor.specialty}</p>
+                        </div>
+                    }
+                    buttons={[
+                        { icon: <PeopleIcon className="text-blue-600" />, href: "#pacientes" },
+                        { icon: <EventIcon className="text-blue-600" />, href: "#agendamentos" },
+                    ]}
+                />
+
+                {/* Sidebar Desktop */}
+                <aside className="hidden md:block w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
                     <div className="text-sm text-gray-800 space-y-2">
                         <p><strong>Nome:</strong> {user.name}</p>
-                        <p><BadgeIcon fontSize="small" /> <strong>ID:</strong> {user.id}</p>
+                        <p><strong>ID:</strong> {user.id}</p>
                         <p><strong>CPF:</strong> {doctor.cpf}</p>
-                        <p><CalendarMonthIcon fontSize="small" /> <strong>Idade:</strong> {calculateAge(doctor.birth)}</p>
                         <p><strong>Gênero:</strong> {doctor.gender}</p>
-                        <p><PhoneIcon fontSize="small" /> <strong>Telefone:</strong> {doctor.phone}</p>
-                        <p><LocalHospitalIcon fontSize="small" /> <strong>Instituição:</strong> {doctor.institution_name || "—"}</p>
-                        <p><WorkIcon fontSize="small" /> <strong>Especialidade:</strong> {doctor.specialty}</p>
+                        <p><strong>Telefone:</strong> {doctor.phone}</p>
+                        <p><strong>Instituição:</strong> {doctor.institution_name || "—"}</p>
+                        <p><strong>Especialidade:</strong> {doctor.specialty}</p>
                     </div>
                     <Button
                         variant="contained"
@@ -106,24 +124,28 @@ function Doctor() {
                         className="w-full mt-6"
                         onClick={handleLogout}
                     >
-                        Sair
+                        Finalizar Sessão
                     </Button>
                 </aside>
 
                 {/* Conteúdo principal */}
-                <section className="w-4/5 px-8">
-                    <div className="grid grid-cols-2 gap-6">
-                        {/* Pacientes e agendamentos */}
-                        <PatientSection doctorId={doctor.id} />
+                <section className="w-full md:w-4/5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Seções */}
+                        <div id="pacientes">
+                            <PatientSection doctorId={doctor.id} />
+                        </div>
 
-                        {/* Consultas agendadas */}
-                        <AppointmentSection user={user} />
+                        <div id="agendamentos">
+                            <AppointmentSection user={user} />
+                        </div>
                     </div>
                 </section>
             </main>
         );
     }
 
+    // Se usuário não for médico
     if (user && !doctor) {
         return (
             <main className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-white pt-24 pb-12">

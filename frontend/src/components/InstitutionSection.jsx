@@ -1,23 +1,28 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import BusinessIcon from '@mui/icons-material/Business';
-import SearchInput from './input/SearchInput';
+
 import { Button, IconButton } from '@mui/material';
+import BusinessIcon from '@mui/icons-material/Business';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useLocation } from 'react-router-dom';
+
+import SearchInput from './input/SearchInput';
 import { apiUrl } from '../utils/constants';
 
 function InstitutionSection() {
-    const [allInstitutions, setAllInstitutions] = useState([]);
-    const [filteredInstitutions, setFilteredInstitutions] = useState([]);
-    const [selectedInstitution, setSelectedInstitution] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [confirmDeleteForm, setConfirmDeleteForm] = useState(false);
+    const [allInstitutions, setAllInstitutions] = useState([]); // Lista completa de instituições
+    const [filteredInstitutions, setFilteredInstitutions] = useState([]); // Lista filtrada para exibição
+    const [selectedInstitution, setSelectedInstitution] = useState(null); // Instituição atualmente selecionada
+    const [searchQuery, setSearchQuery] = useState(''); // Termo atual da busca
+    const [confirmDeleteForm, setConfirmDeleteForm] = useState(false); // Controle da exibição do modal de confirmação de deleção
 
-    const location = useLocation();
+    const location = useLocation(); // Hook que permite saber a rota atual (admin)
 
-    // Buscar todas as instituições na montagem do componente
+    /**
+     * Efetua requisição à API para obter a lista de instituições cadastradas.
+     * Executa assim que o componente é montado.
+     */
     useEffect(() => {
         const fetchInstitutions = async () => {
             try {
@@ -25,88 +30,107 @@ function InstitutionSection() {
                 setAllInstitutions(response.data.institutions);
                 setFilteredInstitutions(response.data.institutions);
             } catch (error) {
-                console.error(error);
+                console.error('Erro ao buscar instituições:', error);
             }
         };
 
         fetchInstitutions();
     }, []);
 
-    // Filtrar instituições conforme o texto digitado
+    /**
+     * Filtra a lista de instituições com base no texto inserido pelo usuário.
+     * A busca é realizada considerando o nome, cidade ou ID.
+     * 
+     * @param {string} query - Texto digitado na barra de pesquisa
+     */
     const handleSearch = (query) => {
         setSearchQuery(query);
         const lowerQuery = query.toLowerCase();
 
-        const filtered = allInstitutions.filter((institution) =>
-            institution.name.toLowerCase().includes(lowerQuery) ||
-            institution.city.toLowerCase().includes(lowerQuery) ||
-            institution.id.toString().includes(lowerQuery)
+        const filtered = allInstitutions.filter(
+            (institution) =>
+                institution.name.toLowerCase().includes(lowerQuery) ||
+                institution.city.toLowerCase().includes(lowerQuery) ||
+                institution.id.toString().includes(lowerQuery)
         );
 
         setFilteredInstitutions(filtered);
     };
 
-    // Abrir modal de detalhes da instituição
+    /**
+     * Define a instituição selecionada para exibir seus detalhes no modal.
+     * 
+     * @param {object} institution - Objeto da instituição selecionada
+     */
     const handleInstitutionClick = (institution) => {
         setSelectedInstitution(institution);
     };
 
-    // Função para o admin deletar uma instituição
+    /**
+     * Envia requisição DELETE para remover uma instituição do sistema.
+     * Após a exclusão, atualiza a lista localmente e fecha o modal de confirmação.
+     */
     const handleDelete = async () => {
         try {
-            const deleteDoctor = await axios.delete(`${apiUrl}/institution/${selectedInstitution.id}`);
+            const response = await axios.delete(`${apiUrl}/institution/${selectedInstitution.id}`);
 
-            if (deleteDoctor.status === 200) {
-                window.location.reload(); // Força o refresh da página
+            if (response.status === 200) {
+                const updatedInstitutions = allInstitutions.filter(i => i.id !== selectedInstitution.id);
+                setAllInstitutions(updatedInstitutions);
+                setFilteredInstitutions(updatedInstitutions);
+                setSelectedInstitution(null);
+                setConfirmDeleteForm(false);
             }
         } catch (error) {
-            console.log(error)
+            console.error('Erro ao deletar instituição:', error);
         }
-    }
+    };
 
-    // Fechar modal
+    /**
+     * Fecha o modal de detalhes da instituição.
+     */
     const closeModal = () => {
         setSelectedInstitution(null);
     };
 
-    // Exibe o formulário para confirmar a exclusão
-    const showDeleteForm = () => {
+    /**
+     * Alterna a visibilidade do modal de confirmação de deleção.
+     */
+    const toggleDeleteForm = () => {
         setConfirmDeleteForm(prev => !prev);
-    }
+    };
 
     return (
-        <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-1">
-            {/* Cabeçalho */}
+        <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-2">
+            {/* Cabeçalho da seção */}
             <div className="sticky top-0 bg-white z-10 pb-2">
                 <div className="flex items-center gap-2 text-purple-600">
                     <BusinessIcon />
                     <h2 className="text-md font-semibold">Instituições Cadastradas</h2>
                 </div>
-                <p className="text-sm text-gray-500">Lista de instituições será exibida aqui.</p>
+                <p className="text-sm text-gray-500">Lista de instituições cadastradas no sistema</p>
             </div>
 
             {/* Campo de busca */}
             <SearchInput
-                placeholder="Pesquise com o ID, nome ou cidade da instituição"
+                placeholder="Pesquise por ID, nome ou cidade da instituição"
                 onSearch={handleSearch}
             />
 
             {/* Lista de instituições */}
-            <div className="max-h-60 overflow-y-auto relative divide-y divide-gray-200">
+            <div className="max-h-60 overflow-y-auto divide-y divide-gray-200">
                 {filteredInstitutions.map((institution) => (
                     <div
                         key={institution.id}
                         onClick={() => handleInstitutionClick(institution)}
-                        className="flex justify-between items-center py-3 px-4 bg-white hover:bg-purple-50 rounded cursor-pointer transition-all"
+                        className="flex justify-between items-center py-3 px-4 hover:bg-purple-50 rounded cursor-pointer transition-all"
                     >
-                        {/* Informações textuais */}
                         <div className="flex flex-col">
                             <p className="text-base font-semibold text-gray-800">{institution.name}</p>
                             <p className="text-sm text-gray-600">{institution.city} - {institution.state}</p>
                             <p className="text-sm text-gray-500">{institution.email}</p>
                         </div>
 
-                        {/* Imagem da instituição */}
                         <img
                             src={`http://localhost:3000/${institution.image_path.replace(/\\/g, "/")}`}
                             alt={`Imagem da instituição ${institution.name}`}
@@ -114,25 +138,22 @@ function InstitutionSection() {
                         />
                     </div>
                 ))}
+
                 {filteredInstitutions.length === 0 && (
                     <p className="text-center text-sm text-gray-400 mt-2">Nenhuma instituição encontrada.</p>
                 )}
             </div>
 
-            {/* Modal com detalhes da instituição */}
+            {/* Modal de detalhes da instituição */}
             {selectedInstitution && (
-                <div className="fixed inset-0 bg-zinc-700/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md relative">
-                        {/* Botão de fechar */}
-                        <div className='w-full px-3 flex justify-end'>
-                            <IconButton
-                                onClick={closeModal}
-                            >
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl w-full max-w-md relative">
+                        <div className="w-full px-3 flex justify-end">
+                            <IconButton onClick={closeModal}>
                                 <CloseIcon />
                             </IconButton>
                         </div>
 
-                        {/* Imagem de capa */}
                         <div
                             className="h-48 bg-cover bg-center relative"
                             style={{
@@ -146,7 +167,6 @@ function InstitutionSection() {
                             </div>
                         </div>
 
-                        {/* Informações da instituição */}
                         <div className="p-6 space-y-3 text-gray-800 text-sm">
                             <p><strong>ID:</strong> {selectedInstitution.id}</p>
                             <p><strong>Cidade:</strong> {selectedInstitution.city}</p>
@@ -155,31 +175,36 @@ function InstitutionSection() {
                             <p><strong>Telefone:</strong> {selectedInstitution.phone || 'Não informado'}</p>
                             <p><strong>Descrição:</strong> {selectedInstitution.description || 'Sem descrição disponível'}</p>
 
-                            {/* Botão para o admin deletar a instituição */}
                             {location.pathname === '/admin' && (
-                                <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={showDeleteForm}>Deletar</Button>
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={toggleDeleteForm}
+                                >
+                                    Deletar
+                                </Button>
                             )}
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* Modal de confirmação de deleção */}
             {confirmDeleteForm && (
-                <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
-                    <div className='w-80 h-auto absolute top-1/3 flex flex-col gap-3 bg-white shadow-lg rounded-lg p-3 z-50'>
-                        <p>Tem certeza que quer deletar a instituição <strong>{selectedInstitution.name}</strong> do sistema? Essa ação não poderá ser desfeita</p>
-                        
-                        <hr />
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="w-80 bg-white rounded-lg shadow-lg p-4">
+                        <p className="text-sm">
+                            Tem certeza que deseja deletar a instituição <strong>{selectedInstitution.name}</strong> do sistema? Esta ação não poderá ser desfeita.
+                        </p>
 
-                        <div className='flex gap-2'>
-                            <Button variant='contained' color='success' onClick={handleDelete}>
-                                sim
+                        <div className="flex gap-2 mt-4 justify-end">
+                            <Button variant="contained" color="error" onClick={handleDelete}>
+                                Deletar
                             </Button>
-
-                            <Button variant='contained' color='error' onClick={showDeleteForm}>
-                                não
+                            <Button variant="contained" color="inherit" onClick={toggleDeleteForm}>
+                                Cancelar
                             </Button>
-
                         </div>
                     </div>
                 </div>

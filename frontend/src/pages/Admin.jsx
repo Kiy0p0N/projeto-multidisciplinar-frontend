@@ -3,29 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button, IconButton } from "@mui/material";
 
-// Ícones do Material UI
+// Ícones
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import LogoutIcon from '@mui/icons-material/Logout';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import HotelIcon from '@mui/icons-material/Hotel';
 import CloseIcon from '@mui/icons-material/Close';
+import PeopleIcon from '@mui/icons-material/People';
+import BusinessIcon from '@mui/icons-material/Business';
+
+import SidebarMobile from "../components/SidebarMobile";
 
 import InstitutionForm from "../components/form/InstitutionForm";
 import PatientSection from "../components/PatientSection";
 import InstitutionSection from "../components/InstitutionSection";
 import DoctorForm from "../components/form/DoctorForm";
 import DoctorSection from "../components/DoctorSection";
+
 import { apiUrl } from "../utils/constants";
 
 function Admin() {
     const [admin, setAdmin] = useState(null);
-    const [showInstitutionForm, setShowInstitutionForm] = useState(false); // Estado para mostrar/ocultar formulário
+    const [showInstitutionForm, setShowInstitutionForm] = useState(false);
     const [showDoctorForm, setDoctorForm] = useState(false);
 
     const navigate = useNavigate();
 
-    // Verifica a sessão e obtém dados do admin
+    // Verifica sessão
     useEffect(() => {
         const fetchAdmin = async () => {
             try {
@@ -35,7 +38,6 @@ function Admin() {
 
                 if (response.status === 200) {
                     const user = response.data.user;
-
                     if (user.type === 'admin') {
                         setAdmin(user);
                     }
@@ -49,7 +51,7 @@ function Admin() {
         fetchAdmin();
     }, [navigate]);
 
-    // Faz logout e redireciona para a página inicial
+    // Logout
     const handleLogout = async () => {
         try {
             const response = await axios.get(`${apiUrl}/logout`, {
@@ -59,52 +61,102 @@ function Admin() {
             if (response.status === 200) {
                 navigate("/");
             }
-
         } catch (error) {
             console.error("Erro ao fazer logout:", error);
         }
     };
 
-    // Alterna exibição do formulário
-    const toggleInstitutionForm = () => {
-        setShowInstitutionForm(prev => !prev);
-    };
+    // Controle dos formulários
+    const toggleInstitutionForm = () => setShowInstitutionForm(prev => !prev);
+    const toggleDoctorForm = () => setDoctorForm(prev => !prev);
 
-    const toggleDoctorForm = () => {
-        setDoctorForm(prev => !prev);
-    };
-    
-    // Enquanto admin não é carregado, não renderiza
     if (!admin) return null;
 
     return (
-        <main className="w-full min-h-dvh flex py-24 bg-gray-100 relative">
-            {/* Formulário sobreposto para adicionar instituição */}
+        <main className="w-full min-h-dvh flex flex-col md:flex-row py-24 px-4 md:px-8 bg-gray-100 gap-6">
+
+            {/* Sidebar Mobile */}
+            <SidebarMobile
+                infoContent={
+                    <div className="text-sm text-gray-800 space-y-2">
+                        <p><strong>Admin:</strong> {admin.name}</p>
+                        <p><strong>ID:</strong> {admin.id}</p>
+                    </div>
+                }
+                buttons={[
+                    { icon: <PeopleIcon className="text-blue-600" />, href: "#pacientes" },
+                    { icon: <MedicalServicesIcon className="text-blue-600" />, href: "#medicos" },
+                    { icon: <BusinessIcon className="text-blue-600" />, href: "#instituicoes" },
+                ]}
+            />
+
+            {/* Sidebar Desktop */}
+            <aside className="hidden md:block w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
+                <nav className="flex flex-col gap-3">
+                    {/* Cadastro */}
+                    <Button variant="contained" startIcon={<MedicalServicesIcon />} onClick={toggleDoctorForm}>
+                        Cadastrar Profissional
+                    </Button>
+
+                    <Button variant="contained" startIcon={<LocalHospitalIcon />} onClick={toggleInstitutionForm}>
+                        Cadastrar Instituição
+                    </Button>
+
+                    <hr className="my-2" />
+
+                    {/* Logout */}
+                    <Button
+                        variant="contained"
+                        color="error"
+                        startIcon={<LogoutIcon />}
+                        onClick={handleLogout}
+                    >
+                        Finalizar Sessão
+                    </Button>
+                </nav>
+            </aside>
+
+            {/* Conteúdo principal */}
+            <section className="w-full md:w-4/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Seções */}
+                    <div id="pacientes">
+                        <PatientSection />
+                    </div>
+
+                    <div id="medicos">
+                        <DoctorSection />
+                    </div>
+
+                    <div id="instituicoes">
+                        <InstitutionSection />
+                    </div>
+                </div>
+            </section>
+
+            {/* Formulário sobreposto - Instituição */}
             {showInstitutionForm && (
-                <div className="fixed inset-0 bg-zinc-400/80 bg-opacity-40 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-zinc-400/80 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md relative">
-                        {/* Botão de fechar */}
                         <IconButton
                             onClick={toggleInstitutionForm}
-                            className="absolute top-0 right-2"
+                            className="absolute top-2 right-2"
                             size="small"
                         >
                             <CloseIcon />
                         </IconButton>
-
-                        <h2 className="text-xl font-semibold mb-4 text-center text-purple-600">Adicionar Instituição</h2>
-
-                        {/* Formulário para cadastro de instituição */}
+                        <h2 className="text-xl font-semibold mb-4 text-center text-purple-600">
+                            Adicionar Instituição
+                        </h2>
                         <InstitutionForm />
                     </div>
                 </div>
             )}
 
-            {/* Formulário sobreposto para adicionar médico */}
+            {/* Formulário sobreposto - Médico */}
             {showDoctorForm && (
-                <div className="fixed inset-0 bg-zinc-400/80 bg-opacity-40 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-zinc-400/80 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md relative">
-                        {/* Botão de fechar */}
                         <IconButton
                             onClick={toggleDoctorForm}
                             className="absolute top-2 right-2"
@@ -112,79 +164,13 @@ function Admin() {
                         >
                             <CloseIcon />
                         </IconButton>
-
-                        <h2 className="text-xl font-semibold mb-4 text-center text-purple-600">Adicionar Médico</h2>
-
-                        {/* Formulário para cadastro de médico */}
+                        <h2 className="text-xl font-semibold mb-4 text-center text-purple-600">
+                            Adicionar Médico
+                        </h2>
                         <DoctorForm />
                     </div>
                 </div>
             )}
-
-            {/* Barra lateral com ações administrativas */}
-            <aside className="w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
-                <h1 className="text-lg font-semibold text-center mb-4">Painel do Administrador</h1>
-
-                <nav className="flex flex-col gap-3">
-                    {/* Botões de cadastro */}
-                    <Button variant="contained" startIcon={<MedicalServicesIcon />} onClick={toggleDoctorForm}>
-                        Cadastrar Profissional
-                    </Button>
-
-                    {/* Botão que alterna o formulário de instituição */}
-                    <Button variant="contained" startIcon={<LocalHospitalIcon />} onClick={toggleInstitutionForm}>
-                        Cadastrar Instituição
-                    </Button>
-
-                    <hr className="my-2" />
-
-                    {/* Botões de acesso a dados */}
-                    <Button variant="outlined" startIcon={<HotelIcon />}>
-                        Ver Internações
-                    </Button>
-
-                    <Button variant="outlined" startIcon={<AssignmentIcon />}>
-                        Gerar Relatórios
-                    </Button>
-
-                    <hr className="my-2" />
-
-                    {/* Logout */}
-                    <Button variant="contained" color="error" startIcon={<LogoutIcon />} onClick={handleLogout}>
-                        Finalizar Sessão
-                    </Button>
-                </nav>
-            </aside>
-
-            {/* Conteúdo principal do painel */}
-            <section className="w-4/5 px-8">
-                {/* Painéis de dados principais */}
-                <div className="grid grid-cols-2 gap-6">
-                    {/* Pacientes cadastrados */}
-                    <PatientSection />
-
-                    {/* Internações */}
-                    <div className="bg-white h-auto p-4 rounded-xl shadow flex flex-col gap-1">
-                        <div className="sticky top-0 bg-white z-10 pb-2">
-                            <div className="flex items-center gap-2 text-green-600">
-                                <HotelIcon />
-                                <h2 className="text-md font-semibold">Internações Ativas</h2>
-                            </div>
-                            <p className="text-sm text-gray-500">Lista de internações será exibida aqui.</p>
-                        </div>
-                        
-                        <div className="max-h-60 overflow-y-auto relative">
-
-                        </div>
-                    </div>
-
-                    {/* Médicos cadastrados */}
-                    <DoctorSection />
-                    
-                    {/* Instituições cadastradas */}
-                    <InstitutionSection />
-                </div>
-            </section>
         </main>
     );
 }
