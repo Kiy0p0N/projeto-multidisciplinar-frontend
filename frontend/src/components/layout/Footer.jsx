@@ -9,28 +9,6 @@ function Footer() {
                 <p className="text-sm text-blue-600">
                     &copy; {new Date().getFullYear()} VidaPlus. Todos os direitos reservados.
                 </p>
-
-                {/* Links adicionais (pode adicionar mais se quiser) */}
-                <div className="flex gap-6">
-                    <a
-                        href="#about"
-                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                        Sobre
-                    </a>
-                    <a
-                        href="#services"
-                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                        Serviços
-                    </a>
-                    <a
-                        href="#contact"
-                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                        Contato
-                    </a>
-                </div>
             </div>
         </footer>
     );

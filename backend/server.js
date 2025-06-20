@@ -136,7 +136,19 @@ app.get("/doctor/:id", async (req, res) => {
   const user_id = req.params.id;
 
   try {
-    const result = await db.query("SELECT * FROM doctors WHERE user_id = $1", [user_id]);
+    const result = await db.query(`
+      SELECT 
+        doctors.cpf,
+        doctors.phone,
+        doctors.gender,
+        doctors.specialty, 
+        institutions.name AS institution_name
+      FROM doctors
+      INNER JOIN institutions ON doctors.institution_id = institutions.id
+      WHERE user_id = $1
+      `,
+      [user_id]
+    );
     const doctor = result.rows[0];
 
     if (!doctor) return res.status(401).json({ message: "Médico não encontrado" });
@@ -196,7 +208,7 @@ app.get("/appointments/occupied/:id", async (req, res) => {
             `SELECT appointment_time, appointment_date
             FROM appointments
             WHERE doctor_id = $1 
-            AND status != 'cancelled'`, // Exclui os cancelados
+            AND status != 'cancelada'`, // Exclui os cancelados
             [doctor_id]
         );
 
@@ -222,6 +234,7 @@ app.get("/appointments/user/:id", async (req, res) => {
                 appointments.id,
                 appointments.appointment_date,
                 appointments.appointment_time,
+                appointments.status,
                 patient_users.name AS patient_name,
                 doctor_users.name AS doctor_name,
                 institutions.name AS institution_name
@@ -440,6 +453,24 @@ app.post("/appointments", async (req, res) => {
   } catch (error) {
     console.error('Erro ao agendar consulta:', error);
     return res.status(500).json({ message: "Erro no servidor ao agendar consulta" });
+  }
+});
+
+// Atualizar o status do agendamento
+app.patch("/appointment/cancel/:id", async (req, res) => {
+  const appointment_id = req.params.id;
+  const appointment_status = req.body.status;
+  
+  try {
+    await db.query(`
+      UPDATE appointments
+      SET status=$1
+      WHERE id=$2
+    `, [appointment_status, appointment_id]);
+
+    res.status(200).json({ message: "Cancelado com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro no servidor", error });
   }
 });
 

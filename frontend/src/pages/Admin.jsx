@@ -78,9 +78,15 @@ function Admin() {
             {/* Sidebar Mobile */}
             <SidebarMobile
                 infoContent={
-                    <div className="text-sm text-gray-800 space-y-2">
-                        <p><strong>Admin:</strong> {admin.name}</p>
-                        <p><strong>ID:</strong> {admin.id}</p>
+                    <div className="text-sm text-gray-800 space-y-2 flex flex-col gap-4">
+                        {/* Cadastro */}
+                        <Button variant="contained" startIcon={<MedicalServicesIcon />} onClick={toggleDoctorForm}>
+                            Cadastrar Profissional
+                        </Button>
+
+                        <Button variant="contained" startIcon={<LocalHospitalIcon />} onClick={toggleInstitutionForm}>
+                            Cadastrar Instituição
+                        </Button>
                     </div>
                 }
                 buttons={[

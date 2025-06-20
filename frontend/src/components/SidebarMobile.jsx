@@ -28,7 +28,7 @@ function SidebarMobile({ infoContent, buttons = [] }) {
     return (
         <>
             {/* Barra lateral */}
-            <div className="fixed top-1/2 left-0 -translate-y-1/2 bg-blue-50 rounded-r-3xl shadow-md flex flex-col gap-6 p-3 md:hidden z-50">
+            <div className="fixed top-1/2 right-0 -translate-y-1/2 bg-blue-50 rounded-l-3xl shadow-md flex flex-col gap-6 p-3 md:hidden z-50">
 
                 {/* Botão fixo de perfil */}
                 <button
@@ -69,6 +69,9 @@ function SidebarMobile({ infoContent, buttons = [] }) {
                         </button>
                     </div>
                     {infoContent}
+
+                    <br />
+                    
                     <Button
                         variant="contained"
                         color="error"

@@ -1,3 +1,4 @@
+// Importação dos componentes e bibliotecas
 import TextInput from "../input/TextInput";
 import ImgInput from "../input/ImgInput";
 import NumbersInput from "../input/NumbersInput";
@@ -7,10 +8,10 @@ import axios from "axios";
 import { apiUrl } from "../../utils/constants";
 
 function InstitutionForm() {
-    // Estado para armazenar o preview da imagem selecionada
+    // Estado responsável pelo preview da imagem
     const [preview, setPreview] = useState(null);
 
-    // Estado para armazenar os dados do formulário
+    // Estado para armazenar dados do formulário
     const [form, setForm] = useState({
         name: '',
         cnpj: '',
@@ -22,205 +23,215 @@ function InstitutionForm() {
         zip_code: '',
     });
 
-    const [error, setError] = useState(null); // Armazena mensagens de erro
+    // Estados para feedback do usuário
+    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
 
-    // Função para atualizar o estado do formulário ao digitar nos inputs
+    /**
+     * Atualiza os campos do formulário dinamicamente.
+     */
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Função para tratar o upload de imagem
+    /**
+     * Manipula o upload da imagem e gera um preview local.
+     */
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setPreview(URL.createObjectURL(file)); // Gera um preview da imagem
+            setPreview(URL.createObjectURL(file));
         }
     };
 
-    // Verifica se todos os campos obrigatórios foram preenchidos
+    /**
+     * Validação simples do formulário.
+     * Verifica se todos os campos obrigatórios foram preenchidos e se a imagem foi selecionada.
+     */
     const isFormValid =
-    form.name.trim() &&
-    form.cnpj.trim() &&
-    form.email.trim() &&
-    form.phone.trim() &&
-    form.address.trim() &&
-    form.city.trim() &&
-    form.state.trim() &&
-    form.zip_code.trim() &&
-    preview !== null; // Verifica se a imagem foi adicionada
+        form.name.trim() &&
+        form.cnpj.trim() &&
+        form.email.trim() &&
+        form.phone.trim() &&
+        form.address.trim() &&
+        form.city.trim() &&
+        form.state.trim() &&
+        form.zip_code.trim() &&
+        preview !== null;
 
+    /**
+     * Manipula o envio do formulário para o backend.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
             const formData = new FormData();
 
-            // Adiciona campos do formulário ao formData
+            // Adiciona todos os campos do formulário ao FormData
             Object.entries(form).forEach(([key, value]) => {
                 formData.append(key, value);
             });
 
-            // Verifica se há imagem selecionada
+            // Verifica se a imagem foi selecionada
             const imageInput = document.getElementById("image");
             if (imageInput?.files.length > 0) {
                 formData.append("image", imageInput.files[0]);
             } else {
-                setError("Imagem obrigatória.");
+                setError("A imagem da instituição é obrigatória.");
                 return;
             }
 
+            // Envia dados para o backend
             const response = await axios.post(`${apiUrl}/institution`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
             if (response.status === 200) {
                 setSuccess(response.data.message);
-                window.location.reload(); // Força o refresh da página
+                window.location.reload(); // Recarrega a página após sucesso
             }
         } catch (error) {
             if (error.response) {
-                setError(error.response.data.message || "Erro ao enviar dados.");
-                console.warn("Erro do servidor:", error.response.data);
+                setError(error.response.data.message || "Erro ao enviar os dados.");
+                console.warn("Erro no servidor:", error.response.data);
             } else {
-                setError("Erro ao conectar ao servidor.");
+                setError("Erro ao conectar com o servidor.");
                 console.error("Erro desconhecido:", error);
             }
         }
     };
 
-
     return (
         <form
             onSubmit={handleSubmit}
-            className="form shadow-lg"
+            className="form bg-white shadow-lg p-6 rounded-xl space-y-6 max-w-xl mx-auto w-full"
         >
-
-            {/* Exibição de erros, se houver */}
+            {/* Mensagens de erro */}
             {error && <p className="text-center text-red-500">{error}</p>}
 
-            {/* Campo: Nome */}
+            {/* Campo: Nome da instituição */}
             <TextInput
-            htmlFor="name"
-            label="Nome da Instituição"
-            name="name"
-            id="name"
-            value={form.name}
-            onChange={handleChange}
-            required={true}
+                htmlFor="name"
+                label="Nome da Instituição"
+                name="name"
+                id="name"
+                value={form.name}
+                onChange={handleChange}
+                required
             />
 
-            {/* Campo: CNPJ (com máscara) */}
+            {/* Campo: CNPJ */}
             <NumbersInput
-            htmlFor="cnpj"
-            label="CNPJ"
-            id="cnpj"
-            name="cnpj"
-            blocks={[2, 3, 3, 4, 2]}
-            delimiters={['.', '.', '/', '-']}
-            value={form.cnpj}
-            onChange={handleChange}
-            required={true}
+                htmlFor="cnpj"
+                label="CNPJ"
+                id="cnpj"
+                name="cnpj"
+                blocks={[2, 3, 3, 4, 2]}
+                delimiters={['.', '.', '/', '-']}
+                value={form.cnpj}
+                onChange={handleChange}
+                required
             />
 
             {/* Campo: Email */}
             <TextInput
-            htmlFor="email"
-            label="Email de Contato"
-            name="email"
-            id="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required={true}
+                htmlFor="email"
+                label="Email de Contato"
+                name="email"
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
             />
 
-            {/* Campo: Telefone (com máscara) */}
+            {/* Campo: Telefone */}
             <NumbersInput
-            htmlFor="phone"
-            label="Telefone"
-            id="phone"
-            name="phone"
-            delimiters={['(', ')', ' ', ' ', '-']}
-            blocks={[0, 2, 0, 1, 4, 4]}
-            minLength={16}
-            value={form.phone}
-            onChange={handleChange}
-            required={true}
+                htmlFor="phone"
+                label="Telefone"
+                id="phone"
+                name="phone"
+                delimiters={['(', ')', ' ', ' ', '-']}
+                blocks={[0, 2, 0, 1, 4, 4]}
+                minLength={16}
+                value={form.phone}
+                onChange={handleChange}
+                required
             />
 
             {/* Campo: Endereço */}
             <TextInput
-            htmlFor="address"
-            label="Endereço"
-            name="address"
-            id="address"
-            value={form.address}
-            onChange={handleChange}
-            required={true}
+                htmlFor="address"
+                label="Endereço"
+                name="address"
+                id="address"
+                value={form.address}
+                onChange={handleChange}
+                required
             />
 
-            {/* Campos: Cidade e Estado (em colunas) */}
-            <div className="grid grid-cols-2 gap-4">
-            <TextInput
-                htmlFor="city"
-                label="Cidade"
-                name="city"
-                id="city"
-                value={form.city}
-                onChange={handleChange}
-                required={true}
-            />
+            {/* Campos: Cidade e Estado */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <TextInput
+                    htmlFor="city"
+                    label="Cidade"
+                    name="city"
+                    id="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    required
+                />
 
-            <TextInput
-                htmlFor="state"
-                label="Estado (UF)"
-                name="state"
-                id="state"
-                maxLength={2}
-                value={form.state}
-                onChange={handleChange}
-                required={true}
-            />
+                <TextInput
+                    htmlFor="state"
+                    label="Estado (UF)"
+                    name="state"
+                    id="state"
+                    maxLength={2}
+                    value={form.state}
+                    onChange={handleChange}
+                    required
+                />
             </div>
 
-            {/* Campo: CEP (com máscara) */}
+            {/* Campo: CEP */}
             <NumbersInput
-            htmlFor="zip_code"
-            label="CEP"
-            name="zip_code"
-            id="zip_code"
-            delimiters={['-']}
-            blocks={[5, 3]}
-            minLength={9}
-            value={form.zip_code}
-            onChange={handleChange}
-            required={true}
+                htmlFor="zip_code"
+                label="CEP"
+                name="zip_code"
+                id="zip_code"
+                delimiters={['-']}
+                blocks={[5, 3]}
+                minLength={9}
+                value={form.zip_code}
+                onChange={handleChange}
+                required
             />
 
-            {/* Campo: Imagem da Instituição */}
+            {/* Campo: Upload de imagem */}
             <ImgInput
-            htmlFor="image"
-            label="Imagem da Instituição"
-            name="image"
-            id="image"
-            onChange={handleImageChange}
-            preview={preview}
+                htmlFor="image"
+                label="Imagem da Instituição"
+                name="image"
+                id="image"
+                onChange={handleImageChange}
+                preview={preview}
             />
 
-            {success && (<p className="text-center text-green-500">{success}</p>)}
+            {/* Mensagem de sucesso */}
+            {success && <p className="text-center text-green-500">{success}</p>}
 
-            {/* Botão de envio - desativado se o formulário estiver incompleto */}
+            {/* Botão de envio */}
             <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={!isFormValid}
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                disabled={!isFormValid}
             >
-            Cadastrar
+                Cadastrar
             </Button>
         </form>
     );
