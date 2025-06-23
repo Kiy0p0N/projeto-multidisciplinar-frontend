@@ -3,6 +3,7 @@ export const daysOfWeek = ['segunda', 'ter√ßa', 'quarta', 'quinta', 'sexta', 's√
 export const apiUrl = "http://localhost:3000";
 
 export const statusColor = {
+        'concluida': 'blue',
         'disponivel': 'green',
         'agendada': 'yellow',
         'cancelada': 'red'

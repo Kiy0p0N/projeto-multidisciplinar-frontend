@@ -208,7 +208,7 @@ app.get("/appointments/occupied/:id", async (req, res) => {
             `SELECT appointment_time, appointment_date
             FROM appointments
             WHERE doctor_id = $1 
-            AND status != 'cancelada'`, // Exclui os cancelados
+            AND status != 'cancelada'`, // Exclui os cancelados e concluídos
             [doctor_id]
         );
 
@@ -241,15 +241,20 @@ app.get("/appointments/user/:id", async (req, res) => {
             FROM appointments
             INNER JOIN patients ON appointments.patient_id = patients.id
             INNER JOIN users AS patient_users ON patients.user_id = patient_users.id
-
             INNER JOIN doctors ON appointments.doctor_id = doctors.id
             INNER JOIN users AS doctor_users ON doctors.user_id = doctor_users.id
-
             INNER JOIN institutions ON appointments.institution_id = institutions.id
-
-            WHERE patients.user_id = $1 OR doctors.user_id = $1
-
-            ORDER BY appointments.appointment_date ASC, appointments.appointment_time ASC`,
+            WHERE (patients.user_id = $1 OR doctors.user_id = $1)
+            ORDER BY 
+                CASE 
+                    WHEN appointments.status = 'disponivel' THEN 1
+                    WHEN appointments.status = 'agendada' THEN 2
+                    WHEN appointments.status = 'concluida' THEN 3
+                    WHEN appointments.status = 'cancelada' THEN 4
+                    ELSE 5
+                END,
+                appointments.appointment_date ASC,
+                appointments.appointment_time ASC;`,
             [user_id] // parâmetro para evitar SQL Injection
         );
 
@@ -441,8 +446,6 @@ app.post("/doctor", upload.single('image'), async (req, res) => {
 app.post("/appointments", async (req, res) => {
   const { patient_id, doctor_id, institution_id, date, time } = req.body;
 
-  console.log(req.body);
-
   try {
     await db.query(
       "INSERT INTO appointments (patient_id, doctor_id, institution_id, appointment_date, appointment_time, status) VALUES ($1, $2, $3, $4, $5, $6)",
@@ -456,10 +459,13 @@ app.post("/appointments", async (req, res) => {
   }
 });
 
-// Atualizar o status do agendamento
-app.patch("/appointment/cancel/:id", async (req, res) => {
+// Atualizar o status
+app.patch("/appointment/update-status/:id", async (req, res) => {
   const appointment_id = req.params.id;
   const appointment_status = req.body.status;
+
+  console.log(appointment_id)
+  console.log(appointment_status)
   
   try {
     await db.query(`
@@ -468,7 +474,7 @@ app.patch("/appointment/cancel/:id", async (req, res) => {
       WHERE id=$2
     `, [appointment_status, appointment_id]);
 
-    res.status(200).json({ message: "Cancelado com sucesso" });
+    res.status(200).json({ message: "Status alterado com sucesso" });
   } catch (error) {
     res.status(500).json({ message: "Erro no servidor", error });
   }

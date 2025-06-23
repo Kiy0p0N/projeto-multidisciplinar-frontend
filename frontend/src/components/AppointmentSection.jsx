@@ -39,6 +39,83 @@ function AppointmentSection({ user }) {
     }, [user]);
 
     /**
+     * Efeito responsável por verificar os agendamentos que estão no horário atual.
+     * Caso o horário e a data coincidam com o horário atual do sistema,
+     * o status do agendamento é alterado de 'agendado' para 'disponivel'.
+     */
+    useEffect(() => {
+        const checkAndUpdateAppointments = () => {
+            const now = new Date();
+            const currentDate = now.toISOString().split('T')[0]; // Extrai data no formato '2025-06-20'
+            const currentTime = now.toTimeString().slice(0, 5); // Extrai horário no formato 'HH:MM'
+
+            appointments.map(async (appointment) => {
+                const appointmentDate = new Date(appointment.appointment_date).toISOString().split('T')[0];
+
+                if (currentDate === appointmentDate) {
+                    const appointmentTime = appointment.appointment_time.slice(0, 5);
+
+                    // Monta uma string completa no formato ISO
+                    const appointmentDateTimeString = `${appointmentDate}T${appointment.appointment_time}`;
+
+                    // Cria o objeto Date para o horário do agendamento
+                    const appointmentDateTime = new Date(appointmentDateTimeString);
+
+                    // Cria um novo Date adicionando 30 minutos ao horário do agendamento
+                    const appointmentEndTime = new Date(appointmentDateTime.getTime() + 30 * 60000).toTimeString().slice(0, 5);
+                    
+                    // Se o horário atual for maior ou igual ao horário agendado e for menor ou igual ao horário final da consulta 
+                    if ((currentTime >= appointmentTime) && (currentTime <= appointmentEndTime) && (appointment.status === 'agendada')) {
+                        try {
+                            const response = await axios.patch(`${apiUrl}/appointment/update-status/${appointment.id}`, {status: "disponivel"});
+
+                            if (response.status === 200) {
+                                const updatedAppointments = appointments.map((a) =>
+                                    a.id === appointment.id
+                                        ? { ...a, status: 'disponivel' }
+                                        : a
+                                );
+
+                                setAppointments(updatedAppointments);
+                                setFilteredAppointments(updatedAppointments);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    } else if ((currentTime > appointmentEndTime) && (appointment.status === 'disponivel')) {
+                        console.log('aqui')
+                        try {
+                            const response = await axios.patch(`${apiUrl}/appointment/update-status/${appointment.id}`, {status: "concluida"});
+
+                            if (response.status === 200) {
+                                const updatedAppointments = appointments.map((a) =>
+                                    a.id === appointment.id
+                                        ? { ...a, status: 'concluida' }
+                                        : a
+                                );
+
+                                setAppointments(updatedAppointments);
+                                setFilteredAppointments(updatedAppointments);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    }
+                }
+            });
+        };
+
+        // Executa imediatamente ao montar o componente
+        checkAndUpdateAppointments();
+
+        // Executa a cada 1 minuto
+        const interval = setInterval(checkAndUpdateAppointments, 10000);
+
+        // Limpa o intervalo quando desmontar o componente
+        return () => clearInterval(interval);
+    }, [appointments]);
+
+    /**
      * Formata uma data no formato ISO para o padrão brasileiro (DD/MM/AAAA).
      * @param {string} dateString - Data no formato ISO.
      * @returns {string} - Data formatada em DD/MM/AAAA.
@@ -53,13 +130,10 @@ function AppointmentSection({ user }) {
      * atualizando o status no backend e refletindo imediatamente no frontend.
      * @param {number} appointmentId - ID do agendamento a ser cancelado.
      */
-    const handleCancel = async (appointmentId) => {
-        const appointmentStatus = { status: 'cancelada' };
-
-        try {
+    const handleCancel = async (appointmentId) => {try {
             const response = await axios.patch(
-                `${apiUrl}/appointment/cancel/${appointmentId}`,
-                appointmentStatus
+                `${apiUrl}/appointment/update-status/${appointmentId}`,
+                { status: 'cancelada' }
             );
 
             if (response.status === 200) {
@@ -133,6 +207,9 @@ function AppointmentSection({ user }) {
 
                 {/* Legenda de status */}
                 <div className="flex flex-col gap-1 mt-2">
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <Brightness1Icon fontSize="small" className="text-blue-500" /> Concluída
+                    </p>
                     <p className="text-sm text-gray-500 flex items-center gap-1">
                         <Brightness1Icon fontSize="small" className="text-green-500" /> Disponível para acessar
                     </p>
@@ -243,13 +320,22 @@ function AppointmentSection({ user }) {
                                 <strong>Instituição:</strong>{' '}
                                 {selectedAppointment.institution_name}
                             </p>
-                            <p>
-                                <strong>Status:</strong>{' '}
-                                {selectedAppointment.status}
-                            </p>
+
+                            {/* Mostra o botão para acessar a telemedicina */}
+                            {selectedAppointment.status === 'disponivel' && (
+                                <Button
+                                    variant='contained'
+                                    color='success'
+                                    fullWidth
+                                >
+                                    Acessar
+                                </Button>
+                            )}
+
+                            <hr />
 
                             {/* Mostra botão de cancelar apenas se não estiver cancelada */}
-                            {selectedAppointment.status !== 'cancelada' && (
+                            {selectedAppointment.status !== 'cancelada' && selectedAppointment.status !== 'concluida' && (
                                 <Button
                                     variant="contained"
                                     color="error"
@@ -260,6 +346,7 @@ function AppointmentSection({ user }) {
                                     Cancelar Agendamento
                                 </Button>
                             )}
+
                         </div>
                     </div>
                 </div>
