@@ -463,9 +463,6 @@ app.post("/appointments", async (req, res) => {
 app.patch("/appointment/update-status/:id", async (req, res) => {
   const appointment_id = req.params.id;
   const appointment_status = req.body.status;
-
-  console.log(appointment_id)
-  console.log(appointment_status)
   
   try {
     await db.query(`

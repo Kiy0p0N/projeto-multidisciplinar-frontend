@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import { IconButton, Button } from '@mui/material';
@@ -19,6 +19,7 @@ function AppointmentSection({ user }) {
     const [searchQuery, setSearchQuery] = useState('');
 
     const location = useLocation();
+    const navigate = useNavigate();
 
     /**
      * Efeito responsável por buscar os agendamentos do usuário
@@ -327,6 +328,7 @@ function AppointmentSection({ user }) {
                                     variant='contained'
                                     color='success'
                                     fullWidth
+                                    onClick={() => navigate(`/telemedicine/${selectedAppointment.id}`)}
                                 >
                                     Acessar
                                 </Button>

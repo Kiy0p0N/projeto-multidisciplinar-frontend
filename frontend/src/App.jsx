@@ -9,6 +9,7 @@ import Terms from './pages/Terms';
 import Admin from './pages/Admin';
 import Patient from './pages/Patient';
 import Doctor from './pages/Doctor';
+import TeleMedicineRoom from './pages/TeleMedicineRoom';
 
 // Importa componentes reutilizáveis de layout
 import Header from './components/layout/Header';
@@ -29,6 +30,7 @@ function App() {
         <Route path='/admin' element={<Admin />} />             {/* Página do painel do administrador */}
         <Route path="/patient" element={<Patient />} />         {/* Página do painel do paciente */}
         <Route path='/doctor' element={<Doctor />} />           {/* Página do painel do médico */}
+        <Route path="/telemedicine/:appointmentId" element={<TeleMedicineRoom />} />           {/* Página da telemedicina */}
       </Routes>
 
       {/* Rodapé fixo em todas as rotas */}

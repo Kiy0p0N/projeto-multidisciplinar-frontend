@@ -7,7 +7,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../utils/constants";
 
-function SidebarMobile({ infoContent, buttons = [] }) {
+function Sidebar({ infoContent, buttons = [], text }) {
     const [openInfo, setOpenInfo] = useState(false);
     const navigate = useNavigate();
 
@@ -28,7 +28,7 @@ function SidebarMobile({ infoContent, buttons = [] }) {
     return (
         <>
             {/* Barra lateral */}
-            <div className="fixed top-1/2 right-0 -translate-y-1/2 bg-blue-50 rounded-l-3xl shadow-md flex flex-col gap-6 p-3 md:hidden z-50">
+            <div className="fixed top-1/2 right-0 -translate-y-1/2 bg-blue-50 rounded-l-3xl shadow-md flex flex-col gap-6 p-3 z-50">
 
                 {/* Botão fixo de perfil */}
                 <button
@@ -43,6 +43,7 @@ function SidebarMobile({ infoContent, buttons = [] }) {
                     btn.onClick ? (
                         <button
                             key={index}
+                            text={text}
                             onClick={btn.onClick}
                             className="p-2 hover:bg-blue-100 rounded-full"
                         >
@@ -62,9 +63,9 @@ function SidebarMobile({ infoContent, buttons = [] }) {
 
             {/* Card lateral de informações */}
             {openInfo && (
-                <div className="fixed top-0 left-0 w-64 h-full bg-white shadow-lg z-50 p-5 flex flex-col">
+                <div className="fixed top-0 right-0 w-64 h-full bg-white shadow-lg z-50 p-5 flex flex-col">
                     <div className="flex justify-end items-center mb-4">
-                        <button onClick={() => setOpenInfo(false)}>
+                        <button onClick={() => setOpenInfo(false)} className="bg-transparent p-1 rounded-full cursor-pointer hover:bg-zinc-300/50">
                             <CloseIcon />
                         </button>
                     </div>
@@ -87,4 +88,4 @@ function SidebarMobile({ infoContent, buttons = [] }) {
     );
 }
 
-export default SidebarMobile;
+export default Sidebar;

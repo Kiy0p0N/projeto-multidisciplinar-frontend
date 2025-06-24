@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@mui/material";
 import axios from "axios";
 
 // Componentes
-import SidebarMobile from "../components/SidebarMobile";
+import Sidebar from "../components/Sidebar";
 import DoctorSection from "../components/DoctorSection";
 import InstitutionSection from "../components/InstitutionSection";
 import AppointmentSection from "../components/AppointmentSection";
@@ -13,7 +12,6 @@ import AppointmentSection from "../components/AppointmentSection";
 import { apiUrl } from "../utils/constants";
 
 // Icons
-import LogoutIcon from "@mui/icons-material/Logout";
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import BusinessIcon from '@mui/icons-material/Business';
 import EventIcon from '@mui/icons-material/Event';
@@ -64,28 +62,14 @@ function Patient() {
             fetchPatient();
         }
     }, [user]);
-
-    // Logout
-    const handleLogout = async () => {
-        try {
-            const response = await axios.get(`${apiUrl}/logout`, {
-                withCredentials: true,
-            });
-            if (response.status === 200) {
-                navigate("/");
-            }
-        } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-        }
-    };
-
+    
     // Tela com dados completos
     if (user && patient) {
         return (
             <main className="w-full min-h-dvh flex flex-col md:flex-row py-24 px-4 md:px-8 bg-gray-100 relative gap-6">
                 
-                {/* Sidebar Mobile */}
-                <SidebarMobile
+                {/* Sidebar */}
+                <Sidebar
                     infoContent={
                         <div className="text-sm text-gray-800 space-y-2">
                             <p><strong>Nome:</strong> {user.name}</p>
@@ -99,6 +83,7 @@ function Patient() {
                         {
                             icon: <LocalHospitalIcon className="text-blue-600" />,
                             href: "#medicos",
+                            text: "Médicos"
                         },
                         {
                             icon: <BusinessIcon className="text-blue-600" />,
@@ -111,30 +96,9 @@ function Patient() {
                     ]}
                 />
 
-
-                {/* Sidebar Desktop (aparece só no desktop) */}
-                <aside className="hidden md:block w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
-                    <div className="text-sm text-gray-800 space-y-2">
-                        <p><strong>Nome:</strong> {user.name}</p>
-                        <p><strong>ID:</strong> {user.id}</p>
-                        <p><strong>CPF:</strong> {patient.cpf}</p>
-                        <p><strong>Gênero:</strong> {patient.gender}</p>
-                        <p><strong>Telefone:</strong> {patient.phone}</p>
-                    </div>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<LogoutIcon />}
-                        className="w-full mt-6"
-                        onClick={handleLogout}
-                    >
-                        Sair
-                    </Button>
-                </aside>
-
                 {/* Conteúdo principal */}
                 <section className="w-full md:w-4/5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-6">
                         {/* Seção de médicos */}
                         <div id="medicos">
                             <DoctorSection patient={patient} />

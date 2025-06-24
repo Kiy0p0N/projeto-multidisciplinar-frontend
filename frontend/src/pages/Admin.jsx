@@ -6,12 +6,11 @@ import { Button, IconButton } from "@mui/material";
 // Ícones
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessIcon from '@mui/icons-material/Business';
 
-import SidebarMobile from "../components/SidebarMobile";
+import Sidebar from "../components/Sidebar";
 
 import InstitutionForm from "../components/form/InstitutionForm";
 import PatientSection from "../components/PatientSection";
@@ -51,21 +50,6 @@ function Admin() {
         fetchAdmin();
     }, [navigate]);
 
-    // Logout
-    const handleLogout = async () => {
-        try {
-            const response = await axios.get(`${apiUrl}/logout`, {
-                withCredentials: true,
-            });
-
-            if (response.status === 200) {
-                navigate("/");
-            }
-        } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-        }
-    };
-
     // Controle dos formulários
     const toggleInstitutionForm = () => setShowInstitutionForm(prev => !prev);
     const toggleDoctorForm = () => setDoctorForm(prev => !prev);
@@ -75,8 +59,8 @@ function Admin() {
     return (
         <main className="w-full min-h-dvh flex flex-col md:flex-row py-24 px-4 md:px-8 bg-gray-100 gap-6">
 
-            {/* Sidebar Mobile */}
-            <SidebarMobile
+            {/* Sidebar */}
+            <Sidebar
                 infoContent={
                     <div className="text-sm text-gray-800 space-y-2 flex flex-col gap-4">
                         {/* Cadastro */}
@@ -96,35 +80,9 @@ function Admin() {
                 ]}
             />
 
-            {/* Sidebar Desktop */}
-            <aside className="hidden md:block w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
-                <nav className="flex flex-col gap-3">
-                    {/* Cadastro */}
-                    <Button variant="contained" startIcon={<MedicalServicesIcon />} onClick={toggleDoctorForm}>
-                        Cadastrar Profissional
-                    </Button>
-
-                    <Button variant="contained" startIcon={<LocalHospitalIcon />} onClick={toggleInstitutionForm}>
-                        Cadastrar Instituição
-                    </Button>
-
-                    <hr className="my-2" />
-
-                    {/* Logout */}
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<LogoutIcon />}
-                        onClick={handleLogout}
-                    >
-                        Finalizar Sessão
-                    </Button>
-                </nav>
-            </aside>
-
             {/* Conteúdo principal */}
             <section className="w-full md:w-4/5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col gap-6">
                     {/* Seções */}
                     <div id="pacientes">
                         <PatientSection />

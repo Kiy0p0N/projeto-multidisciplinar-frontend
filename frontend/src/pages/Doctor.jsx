@@ -1,20 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@mui/material";
 
 // Ícones
-import LogoutIcon from "@mui/icons-material/Logout";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import PhoneIcon from "@mui/icons-material/Phone";
-import BadgeIcon from "@mui/icons-material/Badge";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import WorkIcon from "@mui/icons-material/Work";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 
 import axios from "axios";
 
-import SidebarMobile from "../components/SidebarMobile";
+import Sidebar from "../components/Sidebar";
 
 import PatientSection from "../components/PatientSection";
 import AppointmentSection from "../components/AppointmentSection";
@@ -68,27 +61,13 @@ function Doctor() {
         }
     }, [user]);
 
-    // Logout
-    const handleLogout = async () => {
-        try {
-            const response = await axios.get(`${apiUrl}/logout`, {
-                withCredentials: true,
-            });
-            if (response.status === 200) {
-                navigate("/");
-            }
-        } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-        }
-    };
-
     // Renderização principal
     if (user && doctor) {
         return (
             <main className="w-full min-h-dvh flex flex-col md:flex-row py-24 px-4 md:px-8 bg-gray-100 gap-6">
 
-                {/* Sidebar Mobile */}
-                <SidebarMobile
+                {/* Sidebar */}
+                <Sidebar
                     infoContent={
                         <div className="text-sm text-gray-800 space-y-2">
                             <p><strong>Nome:</strong> {user.name}</p>
@@ -106,31 +85,9 @@ function Doctor() {
                     ]}
                 />
 
-                {/* Sidebar Desktop */}
-                <aside className="hidden md:block w-1/5 bg-white p-5 shadow-md h-fit sticky top-24 self-start rounded-xl">
-                    <div className="text-sm text-gray-800 space-y-2">
-                        <p><strong>Nome:</strong> {user.name}</p>
-                        <p><strong>ID:</strong> {user.id}</p>
-                        <p><strong>CPF:</strong> {doctor.cpf}</p>
-                        <p><strong>Gênero:</strong> {doctor.gender}</p>
-                        <p><strong>Telefone:</strong> {doctor.phone}</p>
-                        <p><strong>Instituição:</strong> {doctor.institution_name || "—"}</p>
-                        <p><strong>Especialidade:</strong> {doctor.specialty}</p>
-                    </div>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<LogoutIcon />}
-                        className="w-full mt-6"
-                        onClick={handleLogout}
-                    >
-                        Finalizar Sessão
-                    </Button>
-                </aside>
-
                 {/* Conteúdo principal */}
                 <section className="w-full md:w-4/5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-6">
                         {/* Seções */}
                         <div id="pacientes">
                             <PatientSection doctorId={doctor.id} />
