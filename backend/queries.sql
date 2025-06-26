@@ -80,3 +80,13 @@ CREATE TRIGGER update_appointments_updated_at
 BEFORE UPDATE ON appointments
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
+
+-- Tabela das mensagens
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    appointment_id INTEGER REFERENCES appointments(id) ON DELETE CASCADE,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    message TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

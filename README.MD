@@ -164,6 +164,7 @@ Protótipos são versões preliminares da interface de um sistema.
     - multer
     - path
     - fs
+    - socket io
 
 3. ### Banco de dados
     - Postgresql
@@ -184,6 +185,8 @@ Observação: atualmente só funciona localmente.
 - [X] Registro de instituições de saúde
 - [X] Registro de médicos
 - [X] Agendamentos
+- [X] Telemedicina com chat de texto
+- [ ] Telemedicina com video
 
 </div>
 

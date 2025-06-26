@@ -1,5 +1,7 @@
-// Importa os módulos necessários
+// Importações principais
 import express from 'express';
+import http from 'http';
+import { Server as SocketServer } from 'socket.io';
 import cors from 'cors';
 import env from 'dotenv';
 import pg from 'pg';
@@ -7,44 +9,25 @@ import bcrypt from 'bcrypt';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy } from 'passport-local';
-import multer from 'multer';  // Para upload de imagem
-import path from 'path';      // Para tratar caminhos de arquivo
-import fs from 'fs';          // Para verificar/criar pastas
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
-const app = express();  // Inicializa a aplicação Express
-const port = 3000;  // Porta do backend
-const saltRounds = 10;  // Fator de complexidade do bcrypt
-env.config();  // Carrega variáveis de ambiente do .env
-
-// Configuração do Multer para salvar imagens
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let folder = 'institution'; // Valor padrão
-
-    // Verifica se a url possui 'doctor'
-    if (req.originalUrl.includes("/doctor")) {
-      folder = 'doctor';
-    }
-
-    const imageDir = `image/${folder}`;
-
-    // Cria a pasta caso não exista
-    if (!fs.existsSync(imageDir)) {
-      fs.mkdirSync(imageDir, { recursive: true });
-    }
-
-    cb(null, imageDir); // Pasta onde será salva a imagem
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Nome do arquivo salvo
+// Configurações iniciais
+const app = express();
+const server = http.createServer(app); // Servidor HTTP para usar com Socket.IO
+const io = new SocketServer(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true
   }
 });
 
-const upload = multer({ storage }); // Middleware para upload
+const port = 3000;
+const saltRounds = 10;
+env.config();
 
-// Conexão com PostgreSQL
+// Banco de dados
 const db = new pg.Client({
   user: process.env.PG_USER,
   database: process.env.PG_DB,
@@ -53,32 +36,78 @@ const db = new pg.Client({
   port: process.env.PG_PORT,
 });
 
-// Conecta ao banco de dados
 db.connect()
-  .then(() => console.log("Conectado ao banco de dados."))
-  .catch((error) => console.error("Erro ao conectar ao banco de dados:", error));
+  .then(() => console.log("Banco de dados conectado"))
+  .catch((err) => console.error("Erro no banco:", err));
 
+// Multer para uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let folder = 'institution';
+    if (req.originalUrl.includes("/doctor")) folder = 'doctor';
+    const imageDir = `image/${folder}`;
+    if (!fs.existsSync(imageDir)) fs.mkdirSync(imageDir, { recursive: true });
+    cb(null, imageDir);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + unique + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage });
+
+// Middlewares
 app.use(cors({
-  origin: "http://localhost:5173", // frontend
-  credentials: true // importante para sessões
+  origin: "http://localhost:5173",
+  credentials: true
 }));
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use('/image', express.static(path.join(process.cwd(), 'image')));
 
-// Configuração da sessão
+// Sessão
 app.use(session({
-  secret: "SESSION_SECRET", // Use uma chave secreta forte em produção
+  secret: "SESSION_SECRET",
   resave: false,
-  saveUninitialized: false, // Evita sessões vazias
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 dia
-    httpOnly: true
-  }
+  saveUninitialized: false,
+  cookie: { maxAge: 86400000, httpOnly: true }
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// CHAT COM SOCKET.IO
+const onlineUsers = {};
+
+io.on('connection', (socket) => {
+  console.log('Novo usuário conectado:', socket.id);
+
+  // Entra na sala da consulta
+  socket.on('join_room', ({ room, user }) => {
+    socket.join(room);
+    onlineUsers[socket.id] = { room, user };
+    console.log(`Usuário ${user.name} entrou na sala ${room}`);
+
+    // Notifica outros usuários
+    socket.to(room).emit('user_joined', { user });
+  });
+
+  // Envio de mensagem
+  socket.on('send_message', (data) => {
+    const { room, message, user } = data;
+    io.to(room).emit('receive_message', { user, message, timestamp: new Date() });
+  });
+
+  // Desconectar
+  socket.on('disconnect', () => {
+    const userData = onlineUsers[socket.id];
+    if (userData) {
+      socket.to(userData.room).emit('user_left', { user: userData.user });
+      delete onlineUsers[socket.id];
+      console.log(`Usuário saiu da sala ${userData.room}`);
+    }
+  });
+});
 
 // Rota protegida - retorna dados do usuário logado
 app.get("/user", (req, res) => {
@@ -265,6 +294,35 @@ app.get("/appointments/user/:id", async (req, res) => {
         return res.status(500).json({
             message: "Erro no servidor ao buscar agendamentos"
         });
+    }
+});
+
+// Consultar se o usuário está permitido a acessar a consulta
+app.get('/appointments/:appointmentId/validate-user/:userId', async (req, res) => {
+    const { appointmentId, userId } = req.params;
+
+    try {
+        const result = await db.query(
+            `
+            SELECT *
+            FROM appointments
+            WHERE id = $1
+            AND (
+                patient_id = (SELECT id FROM patients WHERE user_id = $2)
+                OR doctor_id = (SELECT id FROM doctors WHERE user_id = $2)
+            )
+            `,
+            [appointmentId, userId]
+        );
+
+        if (result.rows.length > 0) {
+            res.json({ valid: true });
+        } else {
+            res.status(403).json({ valid: false, message: 'Acesso negado a esta consulta' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro interno no servidor' });
     }
 });
 
@@ -459,6 +517,22 @@ app.post("/appointments", async (req, res) => {
   }
 });
 
+// Salvar as mensagens do chat da consulta
+app.post("/message", async (req, res) => {
+  const { appointmentId, userId, message } = req.body;
+
+  try {
+    await db.query(
+      `INSERT INTO messages (appointment_id, user_id, message)
+      VALUES ($1, $2, $3)`, 
+    [appointmentId, userId, message]);
+
+    res.status(200).json({ message: "Mensagem salva com sucesso" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro no servidor ", error });
+  }
+});
+
 // Atualizar o status
 app.patch("/appointment/update-status/:id", async (req, res) => {
   const appointment_id = req.params.id;
@@ -569,6 +643,6 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Inicializa o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+server.listen(port, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });
