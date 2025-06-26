@@ -93,31 +93,54 @@ function TeleMedicineRoom() {
     }, [user, appointmentId]);
 
     /**
-     * Efeito para conexão com socket.io e gerenciamento dos eventos de chat.
+     * Efeito para conexão com socket.io e carregamento do histórico de mensagens.
      */
     useEffect(() => {
         if (!user || !appointmentId || !authorizedUser) return;
 
+        // Instanciar conexão socket
         socketRef.current = io("http://localhost:3000");
 
+        // Entrar na sala específica da consulta
         socketRef.current.emit("join_room", {
             room: appointmentId,
             user: { name: user.name, id: user.id },
         });
 
+        // Buscar histórico de mensagens salvas no banco
+        const fetchMessages = async () => {
+            try {
+                const response = await axios.get(`${apiUrl}/messages/${appointmentId}`, {
+                    withCredentials: true
+                });
+
+                if (response.status === 200) {
+                    setMessages(response.data.messages);
+                }
+            } catch (error) {
+                console.error("Erro ao buscar mensagens:", error);
+            }
+        };
+
+        fetchMessages();
+
+        // Receber mensagens em tempo real
         socketRef.current.on("receive_message", (data) => {
             setMessages((prev) => [...prev, data]);
             playSound();
         });
 
+        // Notificar quando alguém entra na sala
         socketRef.current.on("user_joined", (data) => {
             setMessages((prev) => [...prev, { system: true, text: `${data.user.name} entrou na sala.` }]);
         });
 
+        // Notificar quando alguém sai da sala
         socketRef.current.on("user_left", (data) => {
             setMessages((prev) => [...prev, { system: true, text: `${data.user.name} saiu da sala.` }]);
         });
 
+        // Desconectar socket ao sair do componente
         return () => {
             socketRef.current.disconnect();
         };

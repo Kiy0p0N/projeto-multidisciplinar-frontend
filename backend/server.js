@@ -326,6 +326,38 @@ app.get('/appointments/:appointmentId/validate-user/:userId', async (req, res) =
     }
 });
 
+// Buscar mensagens de uma consulta
+app.get("/messages/:appointmentId", async (req, res) => {
+  const { appointmentId } = req.params;
+
+  try {
+    const { rows } = await db.query(
+      `SELECT m.id, m.message, m.timestamp, u.id AS user_id, u.name AS user_name
+      FROM messages AS m
+      JOIN users u ON u.id = m.user_id
+      WHERE m.appointment_id = $1
+      ORDER BY m.timestamp ASC`,
+      [appointmentId]
+    );
+
+    const formattedMessages = rows.map(row => ({
+      id: row.id,
+      message: row.message,
+      createdAt: row.created_at,
+      user: {
+        id: row.user_id,
+        name: row.user_name
+      }
+    }));
+
+    res.status(200).json({ messages: formattedMessages });
+  } catch (error) {
+    console.error("Erro ao buscar mensagens:", error);
+    res.status(500).json({ message: "Erro ao buscar mensagens", error });
+  }
+});
+
+
 // Login
 app.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
