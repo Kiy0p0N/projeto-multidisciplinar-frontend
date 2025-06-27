@@ -1,36 +1,42 @@
-// Importações principais de bibliotecas e dependências
-import { Button, IconButton } from "@mui/material";
+// Componente de sala de telemedicina com chat e videochamada
+// Desenvolvido com React, WebRTC e Socket.IO
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Button, IconButton } from "@mui/material";
 import CallEndIcon from '@mui/icons-material/CallEnd';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import SendIcon from '@mui/icons-material/Send';
-import { useState, useEffect, useRef } from "react";
+import { io } from "socket.io-client";
 import axios from "axios";
 import { apiUrl } from "../utils/constants";
-import { io } from "socket.io-client";
 import notificationSound from '../assets/audio/notification.mp3';
 
 function TeleMedicineRoom() {
-    // Estados globais do componente
-    const [user, setUser] = useState(null);                      // Dados do usuário logado
-    const [authorizedUser, setAuthorizedUser] = useState(false); // Verifica se usuário pode participar da consulta
-    const [muted, setMuted] = useState(false);                   // Controle de mute
-    const [message, setMessage] = useState("");                  // Mensagem digitada
-    const [messages, setMessages] = useState([]);                // Lista de mensagens no chat
-    const [loading, setLoading] = useState(true);                // Estado de carregamento da página
+    // Estados de controle do usuário, chat e chamada
+    const [user, setUser] = useState(null);
+    const [authorizedUser, setAuthorizedUser] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [muted, setMuted] = useState(false);
+    const [cameraOff, setCameraOff] = useState(false);
+    const [message, setMessage] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [otherUsers, setOtherUsers] = useState([]);
 
-    // Hooks e referências
+    // Referências e hooks auxiliares
     const { appointmentId } = useParams();
     const navigate = useNavigate();
     const socketRef = useRef(null);
     const chatEndRef = useRef(null);
-    const audioRef = useRef(new Audio(notificationSound));       // Referência do áudio de notificação
+    const audioRef = useRef(new Audio(notificationSound));
+    const localVideoRef = useRef(null);
+    const remoteVideoRef = useRef(null);
+    const peerConnection = useRef(null);
+    const localStream = useRef(null);
 
-    /**
-     * Função para tocar o som de notificação
-     */
+    // Função para tocar som de notificação
     const playSound = () => {
         const audio = audioRef.current;
         audio.currentTime = 0;
@@ -38,159 +44,169 @@ function TeleMedicineRoom() {
         audio.play();
     };
 
-    /**
-     * Efeito responsável por:
-     * 1. Buscar o usuário autenticado.
-     * 2. Validar se ele tem autorização para acessar essa sala de consulta.
-     */
+    // Busca usuário autenticado
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get(`${apiUrl}/user`, {
-                    withCredentials: true,
-                });
-
-                if (response.status === 200 && response.data.user) {
-                    setUser(response.data.user);
+                const res = await axios.get(`${apiUrl}/user`, { withCredentials: true });
+                if (res.status === 200 && res.data.user) {
+                    setUser(res.data.user);
                 } else {
-                    navigate(-1); // Redireciona caso não esteja autenticado
+                    navigate(-1);
                 }
-            } catch (error) {
-                console.error("Erro ao buscar usuário:", error);
+            } catch {
                 navigate(-1);
             }
         };
-
         fetchUser();
     }, [navigate]);
 
-    /**
-     * Valida se o usuário pode participar da consulta após carregar os dados dele.
-     */
+    // Validação de acesso à sala
     useEffect(() => {
         if (!user) return;
-
-        const validateUser = async () => {
+        const validateAccess = async () => {
             try {
-                const response = await axios.get(`${apiUrl}/appointments/${appointmentId}/validate-user/${user.id}`, {
-                    withCredentials: true,
-                });
-
-                if (response.status === 200 && response.data.valid) {
-                    setAuthorizedUser(true);
-                } else {
-                    setAuthorizedUser(false);
-                }
-            } catch (error) {
-                console.error("Erro na validação de acesso:", error);
+                const res = await axios.get(`${apiUrl}/appointments/${appointmentId}/validate-user/${user.id}`, { withCredentials: true });
+                setAuthorizedUser(res.data.valid);
+            } catch {
                 setAuthorizedUser(false);
             } finally {
                 setLoading(false);
             }
         };
-
-        validateUser();
+        validateAccess();
     }, [user, appointmentId]);
 
-    /**
-     * Efeito para conexão com socket.io e carregamento do histórico de mensagens.
-     */
+    // Inicializa socket, chat e videochamada
     useEffect(() => {
-        if (!user || !appointmentId || !authorizedUser) return;
+        if (!user || !authorizedUser) return;
 
-        // Instanciar conexão socket
-        socketRef.current = io("http://localhost:3000");
+        socketRef.current = io(apiUrl);
+        socketRef.current.emit("join_room", { room: appointmentId, user: { name: user.name, id: user.id } });
 
-        // Entrar na sala específica da consulta
-        socketRef.current.emit("join_room", {
-            room: appointmentId,
-            user: { name: user.name, id: user.id },
-        });
-
-        // Buscar histórico de mensagens salvas no banco
-        const fetchMessages = async () => {
-            try {
-                const response = await axios.get(`${apiUrl}/messages/${appointmentId}`, {
-                    withCredentials: true
-                });
-
-                if (response.status === 200) {
-                    setMessages(response.data.messages);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar mensagens:", error);
-            }
-        };
-
-        fetchMessages();
-
-        // Receber mensagens em tempo real
+        socketRef.current.on("other_users", (users) => setOtherUsers(users));
         socketRef.current.on("receive_message", (data) => {
             setMessages((prev) => [...prev, data]);
             playSound();
         });
-
-        // Notificar quando alguém entra na sala
         socketRef.current.on("user_joined", (data) => {
             setMessages((prev) => [...prev, { system: true, text: `${data.user.name} entrou na sala.` }]);
         });
-
-        // Notificar quando alguém sai da sala
         socketRef.current.on("user_left", (data) => {
             setMessages((prev) => [...prev, { system: true, text: `${data.user.name} saiu da sala.` }]);
         });
 
-        // Desconectar socket ao sair do componente
+        initializeMedia();
+
+        socketRef.current.on("offer", async ({ offer, sender }) => {
+            await createPeer();
+            await peerConnection.current.setRemoteDescription(offer);
+            const answer = await peerConnection.current.createAnswer();
+            await peerConnection.current.setLocalDescription(answer);
+            socketRef.current.emit("answer", { answer, room: appointmentId, sender });
+        });
+
+        socketRef.current.on("answer", async ({ answer }) => {
+            await peerConnection.current.setRemoteDescription(answer);
+        });
+
+        socketRef.current.on("ice_candidate", async ({ candidate }) => {
+            if (candidate) await peerConnection.current.addIceCandidate(candidate);
+        });
+
         return () => {
             socketRef.current.disconnect();
+            if (localStream.current) localStream.current.getTracks().forEach(t => t.stop());
+            if (peerConnection.current) peerConnection.current.close();
         };
     }, [user, appointmentId, authorizedUser]);
 
-    /**
-     * Função para enviar a mensagem:
-     * 1. Envia a mensagem via Socket.IO (tempo real).
-     * 2. Persiste a mensagem no banco via API REST (POST).
-     */
-    const sendMessage = async (e) => {
-        e.preventDefault();
+    // Inicializa mídia local
+    const initializeMedia = async () => {
+        try {
+            localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            if (localVideoRef.current) localVideoRef.current.srcObject = localStream.current;
 
-        if (message.trim() === "") return;
+            if (otherUsers.length > 0) {
+                await createPeer();
+                const offer = await peerConnection.current.createOffer();
+                await peerConnection.current.setLocalDescription(offer);
+                socketRef.current.emit("offer", { offer, room: appointmentId, sender: socketRef.current.id });
+            }
+        } catch (err) {
+            console.error("Erro ao acessar dispositivos de mídia:", err);
+        }
+    };
 
-        const newMessage = {
-            room: appointmentId,
-            message,
-            user: { name: user.name, id: user.id }
+    // Cria conexão peer-to-peer
+    const createPeer = async () => {
+        if (peerConnection.current) return;
+
+        peerConnection.current = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        });
+
+        if (localStream.current) {
+            localStream.current.getTracks().forEach(track => {
+                peerConnection.current.addTrack(track, localStream.current);
+            });
+        }
+
+        peerConnection.current.onicecandidate = (event) => {
+            if (event.candidate) {
+                socketRef.current.emit("ice_candidate", {
+                    candidate: event.candidate,
+                    room: appointmentId,
+                    sender: socketRef.current.id
+                });
+            }
         };
 
-        try {
-            // Envio em tempo real via Socket.IO
-            socketRef.current.emit("send_message", newMessage);
+        peerConnection.current.ontrack = (event) => {
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+        };
+    };
 
-            // Persistir no banco de dados
+    // Envia mensagem para o chat
+    const sendMessage = async (e) => {
+        e.preventDefault();
+        if (!message.trim()) return;
+
+        const newMessage = { room: appointmentId, message, user: { name: user.name, id: user.id } };
+
+        try {
+            socketRef.current.emit("send_message", newMessage);
             await axios.post(`${apiUrl}/message`, {
                 appointmentId: appointmentId,
                 userId: user.id,
-                message: message
-            }, {
-                withCredentials: true // Garante que cookies de sessão sejam enviados
-            });
-
-            setMessage(""); // Limpa campo após envio
+                message
+            }, { withCredentials: true });
+            setMessage("");
         } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
         }
     };
 
-    /**
-     * Faz o scroll automático até a última mensagem quando houver atualização.
-     */
+    // Scroll automático no chat
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // ==================
-    // Renderização Condicional
-    // ==================
+    // Controle de microfone
+    const toggleMute = () => {
+        if (localStream.current) {
+            localStream.current.getAudioTracks().forEach(track => (track.enabled = !track.enabled));
+            setMuted(prev => !prev);
+        }
+    };
+
+    // Controle de câmera
+    const toggleCamera = () => {
+        if (localStream.current) {
+            localStream.current.getVideoTracks().forEach(track => (track.enabled = !track.enabled));
+            setCameraOff(prev => !prev);
+        }
+    };
 
     if (loading) {
         return (
@@ -200,80 +216,44 @@ function TeleMedicineRoom() {
         );
     }
 
-    if (!user) return null;
-
     if (!authorizedUser) {
         return (
             <main className="w-full h-screen flex justify-center items-center bg-red-500/10">
-                <h1 className="text-3xl sm:text-4xl font-bold text-red-600">
+                <h1 className="text-3xl font-bold text-red-600">
                     Acesso negado. Você não tem permissão para acessar esta consulta.
                 </h1>
             </main>
         );
     }
 
-    // ==================
-    // Renderização Principal da Sala
-    // ==================
-
     return (
         <main className="flex flex-col gap-2 min-h-screen bg-gray-100">
-            {/* Cabeçalho */}
             <header className="mt-20 p-4 bg-indigo-700 text-white flex justify-between items-center shadow-md">
-                <h2 className="text-lg sm:text-xl font-semibold">Sala de Telemedicina</h2>
-                <Button
-                    variant="contained"
-                    color="error"
-                    startIcon={<CallEndIcon />}
-                    onClick={() => navigate(-1)}
-                >
+                <h2 className="text-xl font-semibold">Sala de Telemedicina</h2>
+                <Button variant="contained" color="error" startIcon={<CallEndIcon />} onClick={() => navigate(-1)}>
                     Sair
                 </Button>
             </header>
 
-            {/* Corpo */}
-            <section className="max-h-[80dvh] flex flex-col lg:flex-row flex-1 overflow-hidden">
-                {/* Área de Vídeo */}
-                <div className="relative flex-1 bg-black flex items-center justify-center">
-                    <video
-                        id="localVideo"
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-1/4 sm:w-1/5 rounded-lg shadow-lg border-4 border-white absolute top-4 left-4 z-10"
-                    ></video>
+            <section className="flex flex-col lg:flex-row flex-1 max-h-[80dvh]">
+                <div className="relative flex-1 flex items-center justify-center">
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-1/4 sm:w-1/5 rounded-lg shadow-lg border-4 border-white absolute top-4 left-4 z-10" />
+                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain" />
 
-                    <video
-                        id="remoteVideo"
-                        autoPlay
-                        playsInline
-                        className="w-full h-full object-contain"
-                    ></video>
-
-                    {/* Controles de áudio e vídeo */}
                     <div className="absolute bottom-4 w-full flex justify-center gap-4">
-                        <IconButton
-                            onClick={() => setMuted(!muted)}
-                            className="bg-white shadow-lg"
-                            aria-label={muted ? "Ativar microfone" : "Mutar microfone"}
-                        >
+                        <IconButton onClick={toggleMute} className="bg-white shadow-lg">
                             {muted ? <MicOffIcon className="text-red-500" /> : <MicIcon />}
                         </IconButton>
-
-                        <IconButton className="bg-white shadow-lg" aria-label="Câmera">
-                            <VideocamIcon />
+                        <IconButton onClick={toggleCamera} className="bg-white shadow-lg">
+                            <VideocamIcon className={cameraOff ? "text-red-500" : ""} />
                         </IconButton>
                     </div>
                 </div>
 
-                {/* Área de Chat */}
-                <aside className="w-full min-h-full max-h-full lg:w-96 border-t lg:border-t-0 lg:border-l bg-white flex flex-col">
-                    {/* Cabeçalho do chat */}
+                <aside className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l bg-white flex flex-col">
                     <div className="p-4 border-b flex items-center justify-between">
                         <h3 className="text-md font-semibold text-gray-700">Chat</h3>
                     </div>
-
-                    {/* Lista de mensagens */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
                         {messages.map((msg, index) => (
                             msg.system ? (
@@ -295,11 +275,7 @@ function TeleMedicineRoom() {
                         <div ref={chatEndRef} />
                     </div>
 
-                    {/* Campo de envio de mensagens */}
-                    <form
-                        onSubmit={sendMessage}
-                        className="flex items-center p-3 gap-2 border-t"
-                    >
+                    <form onSubmit={sendMessage} className="flex items-center p-3 gap-2 border-t">
                         <input
                             type="text"
                             value={message}
@@ -307,7 +283,7 @@ function TeleMedicineRoom() {
                             placeholder="Digite sua mensagem..."
                             className="flex-1 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
-                        <IconButton type="submit" color="primary" aria-label="Enviar">
+                        <IconButton type="submit" color="primary">
                             <SendIcon />
                         </IconButton>
                     </form>

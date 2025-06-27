@@ -76,37 +76,87 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// CHAT COM SOCKET.IO
 const onlineUsers = {};
+const rooms = {}; // Armazena sockets de cada sala
 
 io.on('connection', (socket) => {
-  console.log('Novo usuário conectado:', socket.id);
+    console.log('Novo usuário conectado:', socket.id);
 
-  // Entra na sala da consulta
-  socket.on('join_room', ({ room, user }) => {
-    socket.join(room);
-    onlineUsers[socket.id] = { room, user };
-    console.log(`Usuário ${user.name} entrou na sala ${room}`);
+    /**
+     * Quando um usuário entra na sala
+     */
+    socket.on('join_room', ({ room, user }) => {
+        socket.join(room);
+        onlineUsers[socket.id] = { room, user };
 
-    // Notifica outros usuários
-    socket.to(room).emit('user_joined', { user });
-  });
+        if (!rooms[room]) {
+            rooms[room] = [];
+        }
+        rooms[room].push(socket.id);
 
-  // Envio de mensagem
-  socket.on('send_message', (data) => {
-    const { room, message, user } = data;
-    io.to(room).emit('receive_message', { user, message, timestamp: new Date() });
-  });
+        console.log(`Usuário ${user.name} entrou na sala ${room}`);
 
-  // Desconectar
-  socket.on('disconnect', () => {
-    const userData = onlineUsers[socket.id];
-    if (userData) {
-      socket.to(userData.room).emit('user_left', { user: userData.user });
-      delete onlineUsers[socket.id];
-      console.log(`Usuário saiu da sala ${userData.room}`);
-    }
-  });
+        // Envia para o usuário atual quem já está na sala
+        const otherUsers = rooms[room].filter(id => id !== socket.id);
+        socket.emit('other_users', otherUsers);
+
+        // Notifica outros usuários na sala que alguém entrou
+        socket.to(room).emit('user_joined', { user });
+    });
+
+    /**
+     * Envio de mensagens de texto
+     */
+    socket.on('send_message', (data) => {
+        const { room, message, user } = data;
+        io.to(room).emit('receive_message', {
+            user,
+            message,
+            timestamp: new Date()
+        });
+    });
+
+    /**
+     * WebRTC Signaling - Oferta
+     */
+    socket.on('offer', ({ room, offer, sender }) => {
+        socket.to(room).emit('offer', { offer, sender });
+    });
+
+    /**
+     * WebRTC Signaling - Resposta
+     */
+    socket.on('answer', ({ room, answer, sender }) => {
+        socket.to(room).emit('answer', { answer, sender });
+    });
+
+    /**
+     * ICE Candidates
+     */
+    socket.on('ice_candidate', ({ room, candidate, sender }) => {
+        socket.to(room).emit('ice_candidate', { candidate, sender });
+    });
+
+    /**
+     * Desconectar
+     */
+    socket.on('disconnect', () => {
+        const userData = onlineUsers[socket.id];
+        if (userData) {
+            const { room, user } = userData;
+
+            // Remove socket da sala
+            rooms[room] = rooms[room].filter(id => id !== socket.id);
+            if (rooms[room].length === 0) {
+                delete rooms[room]; // Limpa sala vazia
+            }
+
+            socket.to(room).emit('user_left', { user });
+            delete onlineUsers[socket.id];
+
+            console.log(`Usuário ${user.name} saiu da sala ${room}`);
+        }
+    });
 });
 
 // Rota protegida - retorna dados do usuário logado
