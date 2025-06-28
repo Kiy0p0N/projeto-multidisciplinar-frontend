@@ -67,6 +67,7 @@ function DoctorSection({ patient }) {
      * @param {object} doctor - Objeto do médico selecionado
      */
     const handleDoctorClick = (doctor) => {
+        console.log(doctor)
         setSelectedDoctor(doctor);
         setShowAppointmentForm(false); // Garante que o form de agendamento esteja fechado ao trocar de médico
     };
