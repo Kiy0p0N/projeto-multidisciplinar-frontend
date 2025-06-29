@@ -86,7 +86,7 @@ function Doctor() {
                 />
 
                 {/* Conteúdo principal */}
-                <section className="w-full md:w-4/5">
+                <section className="w-full">
                     <div className="flex flex-col gap-6">
                         {/* Seções */}
                         <div id="pacientes">

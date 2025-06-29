@@ -1,223 +1,189 @@
-# Projeto Multidisciplinar - Ênfase em Frontend
+# Projeto Multidisciplinar - Sistema de Gestão Hospitalar e de Serviços de Saúde (SGHSS)
 
----
+Sistema desenvolvido como projeto acadêmico multidisciplinar com ênfase em Frontend. Este sistema simula uma plataforma de gestão hospitalar, oferecendo funcionalidades como cadastro de pacientes, profissionais e instituições, agendamento de consultas, além de suporte à telemedicina.
 
-## 🔗 Links para navegação
-- [⚠️ Objetivo](#objetivo)
-- [📕 Caso de estudo](#caso-de-estudo)
-- [📋 Requisitos](#requisitos)
-- [🎨 Protótipos](#prototipos)
-- [🤖 Tecnologias](#tecnologias)
-- [🏁 O que faz](#oque-faz)
-- [🏋️ Exemplo de execução](#exemplo)
-- [👨‍💻 Autor](#autor)
-- [📄 Licença](#licenca)
+## Índice
 
----
+* [Sobre o Projeto](#sobre-o-projeto)
+* [Caso de Estudo](#caso-de-estudo)
+* [Funcionalidades](#funcionalidades)
+* [Requisitos](#requisitos)
+* [Protótipos](#protótipos)
+* [Tecnologias Utilizadas](#tecnologias-utilizadas)
+* [Como Executar](#como-executar)
+* [Autor](#autor)
+* [Licença](#licença)
 
-<div id="objetivo">
+## Sobre o Projeto
 
-## ⚠️ Objetivo
- Neste projeto, terei a oportunidade de integrar os conhecimentos adquiridos ao longo do curso e aplicá-los em um **Estudo de caso na área da saúde**. O objetivo é desenvolver um sistema teórico (com protótipo, documentação ou código funcional) que atenda aos requisitos propostos.
+Este projeto tem como objetivo integrar os conhecimentos adquiridos durante o curso, aplicando-os no desenvolvimento de uma solução teórica e prática para a área da saúde. O sistema pode ser entregue como protótipo, documentação ou código funcional, atendendo aos requisitos estabelecidos no estudo de caso.
 
-</div>
+## Caso de Estudo
 
----
+A instituição fictícia VidaPlus administra hospitais, clínicas, laboratórios e equipes de atendimento domiciliar. A necessidade é de um Sistema de Gestão Hospitalar e de Serviços de Saúde (SGHSS) capaz de centralizar as seguintes operações:
 
-<div id="caso-de-estudo">
+* Cadastro e atendimento de pacientes (consultas, exames, prontuários, telemedicina).
+* Gestão de profissionais de saúde (médicos, enfermeiros, técnicos, agendas, prescrições).
+* Administração hospitalar (gestão de leitos, relatórios financeiros, suprimentos).
+* Atendimento por telemedicina (consultas online, prescrições, agendamentos).
+* Segurança e conformidade com normas (LGPD, controle de acesso, auditorias).
 
-## 📕 Caso de estudo
-A instituição VidaPlus administra hospitais, clínicas de bairro, laboratórios e equipes de home care. Ela precisa de um Sistema de Gestão Hospitalar e de Serviços de Saúde (SGHSS) para centralizar: 
-1. **Cadastro e Atendimento de Pacientes:** consultas, exames, prontuários, telemedicina. 
-2. **Gestão de Profissionais de Saúde:** médicos, enfermeiros, técnicos, agendas, prescrições. 
-3. **Administração Hospitalar:** leitos, relatórios financeiros, suprimentos. 
-4. **Telemedicina:** atendimentos e prescrições online, marcação de consultas presenciais e exames. 
-5. **Segurança e Compliance:** controle de acesso, LGPD, registros de auditoria.
+## Funcionalidades
 
-</div>
+* Login de usuários.
+* Cadastro de pacientes, médicos e instituições.
+* Agendamento e cancelamento de consultas.
+* Acesso a sessões de teleconsulta com chat de texto.
+* Gerenciamento de agendas para profissionais.
+* Atualização de prontuários médicos.
+* Emissão de receitas digitais.
+* Geração de relatórios administrativos.
+* Controle de acesso baseado em perfis (paciente, profissional e administrador).
+* (Em desenvolvimento) Suporte a videochamadas na telemedicina.
 
----
+## Requisitos
 
-<div id="requisitos">
+### Funcionais (RF)
 
-## 📋 Requisitos
-1. ### ✅ Funcionais (RF):
+* **Pacientes:**
 
-    Requisitos funcionais descrevem o que o sistema deve fazer.
-    
-    #### RF01 – Pacientes
-        - Cadastrar dados pessoais e clínicos.
+  * Cadastro de dados pessoais e clínicos.
+  * Visualização de histórico clínico.
+  * Agendamento e cancelamento de consultas.
+  * Recebimento de notificações.
+  * Acesso à teleconsulta.
 
-        - Visualizar histórico clínico.
+* **Profissionais de Saúde:**
 
-        - Agendar e cancelar consultas.
+  * Gerenciamento de agenda.
+  * Atualização de prontuários.
+  * Emissão de receitas digitais.
+  * Acompanhamento de histórico dos pacientes.
 
-        - Receber notificações (ex: lembretes de consulta).
+* **Administradores:**
 
-        - Acessar sessões de teleconsulta.
+  * Gerenciamento de cadastros (pacientes, profissionais, instituições).
+  * Controle de internações.
+  * Geração de relatórios administrativos e estatísticos.
 
-    #### RF02 – Profissionais de Saúde
-        - Gerenciar suas próprias agendas.
+* **Telemedicina:**
 
-        - Atualizar prontuários médicos dos pacientes.
+  * Realização de videochamadas seguras (em desenvolvimento).
+  * Registro de prontuários durante ou após consultas.
+  * Emissão de prescrições digitais.
 
-        - Emitir receitas digitais.
+### Não Funcionais (RNF)
 
-        - Acompanhar o histórico clínico dos pacientes atendidos.
+* **Segurança:**
 
-    #### RF03 – Administradores
-        - Gerenciar cadastros de pacientes e profissionais de saúde.
+  * Criptografia de dados sensíveis.
+  * Controle de acesso baseado em perfis.
+  * Registro de logs para auditoria.
+  * Conformidade com a LGPD.
 
-        - Controlar o fluxo de internações hospitalares.
+* **Escalabilidade:**
 
-        - Gerar relatórios administrativos e estatísticos.
+  * Suporte a múltiplas unidades hospitalares simultaneamente.
 
-    #### RF04 – Telemedicina
-        - Realizar videochamadas seguras com os pacientes.
+* **Desempenho:**
 
-        - Registrar prontuários eletrônicos durante ou após a consulta.
+  * Baixo tempo de resposta, especialmente para operações críticas.
 
-        - Emitir prescrições online durante a teleconsulta.
+* **Acessibilidade:**
 
+  * Interface responsiva e aderente às normas internacionais de acessibilidade (W3C/WCAG).
 
-2. ### ⚙️ Não Funcionais (RNF):
-    
-    Requisitos não funcionais dizem como o sistema deve se comportar.
+* **Disponibilidade:**
 
-    #### RNF01 – Segurança
-        - Utilizar criptografia para dados sensíveis (ex: dados de pacientes).
+  * Uptime mínimo de 99,5%.
+  * Backup periódico e sistema robusto de geração de logs.
 
-        - Implementar controle de acesso baseado em perfis (paciente, profissional, admin).
+## Protótipos
 
-        - Registrar logs de uso e ações para auditoria.
+* **Baixa fidelidade:**
+  Validação rápida de fluxos e ideias.
+  ![Protótipo de baixa fidelidade](./image/prototipo_baixa_fidelidade.png)
 
-        - Estar em conformidade com a LGPD (Lei Geral de Proteção de Dados).
+* **Média/Alta fidelidade:**
+  Representação mais próxima do produto final.
+  [Acessar no Figma](https://www.figma.com/design/XiryicMrJK9n9ubcwu09lS/Untitled?node-id=50-2&t=OYdr396MsLzCelwq-1)
+  ![Protótipo de média/alta fidelidade](./image/prototipo_media_alta_fidelidade.png)
 
-    #### RNF02 – Escalabilidade
-        - O sistema deve ser capaz de suportar múltiplas unidades hospitalares em operação simultânea.
+## Tecnologias Utilizadas
 
-    #### RNF03 – Desempenho
-        - Garantir tempo de resposta rápido, especialmente em consultas críticas ou operações urgentes.
+### Frontend
 
-    #### RNF04 – Acessibilidade
-        - Interface amigável e responsiva.
+* React
+* Material UI
+* React Router DOM
+* Cleave.js
+* Tailwind CSS
+* Axios
 
-        - Seguir padrões internacionais de acessibilidade (W3C/WCAG).
+### Backend
 
-    #### RNF05 – Disponibilidade
-        - Ter disponibilidade mínima de 99,5%.
+* Express.js
+* bcrypt
+* dotenv
+* PostgreSQL (pg)
+* express-session
+* passport e passport-local
+* multer
+* path
+* fs
+* socket.io
 
-        - Contar com rotinas de backup e geração de logs robustos para garantir a recuperação de dados e rastreamento.
+### Banco de Dados
 
+* PostgreSQL
 
-</div>
+## Como Executar
 
----
+> **Observação:** O sistema atualmente funciona apenas localmente.
 
-<div id="prototipos">
+1. Clone o repositório:
 
-## 🎨 Protótipos
+```bash
+git clone https://github.com/Kiy0p0N/projeto-multidisciplinar-frontend.git
+```
 
-Protótipos são versões preliminares da interface de um sistema.
+2. Instale as dependências no frontend e backend:
 
-1. ### Baixa fidelidade
+```bash
+cd frontend
+npm install
+cd ../backend
+npm install
+```
 
-    Valida ideias e fluxos rapidamente.
+3. Configure as variáveis de ambiente no backend (`.env`).
 
-    ![Protótipo de baixa fidelidade](./image/prototipo_baixa_fidelidade.png)
+4. Rode o backend:
 
+```bash
+npm run dev
+```
 
-2. ### Média/alta fidelidade
+5. Rode o frontend:
 
-    Aproxima-se mais do produto final (ainda não reflete como o produto final se parecerá).
+```bash
+npm run dev
+```
 
-    
-    [Link para o protótipo no Figma](https://www.figma.com/design/XiryicMrJK9n9ubcwu09lS/Untitled?node-id=50-2&t=OYdr396MsLzCelwq-1)
+6. Acesse via navegador:
 
-    ![Protótipo de média/alta fidelidade](./image/prototipo_media_alta_fidelidade.png)
+```
+http://localhost:5173
+```
 
+## Autor
 
-</div>
+Desenvolvido por **Felipe Cesar Rodrigues**.
+Projeto acadêmico multidisciplinar com ênfase em Frontend – 2025.
 
----
+* [LinkedIn](https://www.linkedin.com/in/felipe-cesar-rodrigues/)
+* [GitHub](https://github.com/Kiy0p0N)
 
-<div id="tecnologias">
+## Licença
 
-## 🤖 Tecnologias
-
-1. ### Frontend
-    - React
-    - Material ui
-    - React-router-dom
-    - Cleave.js
-    - Tailwindcss
-    - Axios
-
-2. ### Backend
-    - express
-    - bcrypt
-    - dotenv
-    - pg
-    - express-session
-    - passport
-    - passport-local
-    - multer
-    - path
-    - fs
-    - socket io
-
-3. ### Banco de dados
-    - Postgresql
-    
-
-</div>
-
----
-
-<div id="oque-faz">
-
-## 🏁 O que faz
-Observação: atualmente só funciona localmente.
-- [x] Login de usuários cadastrados
-- [x] Registro de novos usuários (pacientes)
-- [x] Informa erros, como email ou senha incorretas
-- [x] Permite sessões
-- [X] Registro de instituições de saúde
-- [X] Registro de médicos
-- [X] Agendamentos
-- [X] Telemedicina com chat de texto
-- [ ] Telemedicina com video
-
-</div>
-
----
-
-<div id="exemplo">
-
-## 🏋️ Exemplo de execução
-![Exemplo de execução](./image/exemplo-execucao.gif)
-
-</div>
-
----
-
-<div id="autor">
-
-## 👨‍💻 Autor
-
-Desenvolvido por **Felipe Cesar Rodrigues**  
-Projeto acadêmico multidisciplinar com ênfase em Frontend – 2025  
-Contato: [LinkedIn](https://www.linkedin.com/in/felipe-cesar-rodrigues/) | [GitHub](https://github.com/Kiy0p0N)
-
-
-</div>
-
---- 
-
-<div id="licenca">
-
-## 📄 Licença
-
-Licenciado sob a [MIT License](./LICENSE).
-
-</div>
+Este projeto está licenciado sob a [MIT License](./LICENSE).

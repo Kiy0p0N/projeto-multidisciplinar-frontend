@@ -97,7 +97,7 @@ function Patient() {
                 />
 
                 {/* Conteúdo principal */}
-                <section className="w-full md:w-4/5">
+                <section className="w-full">
                     <div className="flex flex-col gap-6">
                         {/* Seção de médicos */}
                         <div id="medicos">

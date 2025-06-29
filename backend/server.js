@@ -5,6 +5,7 @@ import session from 'express-session';
 import cors from 'cors';
 import passport from './config/passport.js';
 import path from 'path';
+import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/users.routes.js';
@@ -21,6 +22,9 @@ import { Server as SocketServer } from 'socket.io';
 // Inicializa o Express
 const app = express();
 
+// Carrega as variáveis do arquivo .env para process.env
+dotenv.config();
+
 // Middleware CORS: permite que o frontend (localhost:5173) acesse o backend
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -34,12 +38,13 @@ app.use('/image', express.static(path.join(process.cwd(), 'image')));
 
 // Middleware de sessão (necessário para login com Passport)
 app.use(session({
-  secret: 'uma-chave-secreta-muito-segura-aqui', // Substitua por uma chave segura em produção
+  secret: process.env.SECRET_SESSION, // Substitua por uma chave segura em produção
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000, // 1 dia
-    // secure: true // Ative em produção com HTTPS
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
 
@@ -53,7 +58,7 @@ app.use(passport.session());
 const server = http.createServer(app); // Cria o servidor HTTP a partir do Express
 const io = new SocketServer(server, {
   cors: {
-    origin: 'http://localhost:5173', // Libera acesso para o frontend
+    origin: ['http://localhost:5173' || 'https://projeto-multidisciplinar-frontend.vercel.app'], // Libera acesso para o frontend
     credentials: true
   }
 });
@@ -91,21 +96,19 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Tratamento de oferta de vídeo WebRTC
-  socket.on("offer", ({ offer, room, sender }) => {
-    // Envia oferta para todos da sala, exceto quem enviou
-    socket.to(room).emit("offer", { offer, sender });
+  // Oferta
+  socket.on("offer", ({ offer, room, sender, target }) => {
+    io.to(target).emit("offer", { offer, sender });
   });
 
-  // Tratamento da resposta à oferta
-  socket.on("answer", ({ answer, room, sender }) => {
-    // Envia resposta para o ofertante original
-    socket.to(room).emit("answer", { answer, sender });
+  // Resposta
+  socket.on("answer", ({ answer, room, sender, target }) => {
+    io.to(target).emit("answer", { answer, sender });
   });
 
-  // Envio de ICE candidates (auxiliam na conexão peer-to-peer)
-  socket.on("ice_candidate", ({ candidate, room, sender }) => {
-    socket.to(room).emit("ice_candidate", { candidate, sender });
+  // ICE Candidate
+  socket.on("ice_candidate", ({ candidate, room, sender, target }) => {
+    io.to(target).emit("ice_candidate", { candidate, sender });
   });
 });
 

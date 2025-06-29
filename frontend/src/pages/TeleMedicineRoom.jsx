@@ -1,5 +1,4 @@
-// Componente de sala de telemedicina com chat e videochamada
-// Desenvolvido com React, WebRTC e Socket.IO
+// Componente de sala de telemedicina com chat e videochamada (WebRTC + Socket.IO)
 
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,7 +14,7 @@ import { apiUrl } from "../utils/constants";
 import notificationSound from '../assets/audio/notification.mp3';
 
 function TeleMedicineRoom() {
-    // Estados de controle do usuário, chat e chamada
+    // Estados de controle de usuário, mídia, chat e autorização
     const [user, setUser] = useState(null);
     const [authorizedUser, setAuthorizedUser] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -25,7 +24,7 @@ function TeleMedicineRoom() {
     const [messages, setMessages] = useState([]);
     const [otherUsers, setOtherUsers] = useState([]);
 
-    // Referências e hooks auxiliares
+    // Referências para elementos DOM, sockets e media streams
     const { appointmentId } = useParams();
     const navigate = useNavigate();
     const socketRef = useRef(null);
@@ -36,7 +35,7 @@ function TeleMedicineRoom() {
     const peerConnection = useRef(null);
     const localStream = useRef(null);
 
-    // Função para tocar som de notificação
+    /** Toca o som de notificação */
     const playSound = () => {
         const audio = audioRef.current;
         audio.currentTime = 0;
@@ -44,7 +43,7 @@ function TeleMedicineRoom() {
         audio.play();
     };
 
-    // Busca usuário autenticado
+    /** Busca informações do usuário autenticado */
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -52,7 +51,7 @@ function TeleMedicineRoom() {
                 if (res.status === 200 && res.data.user) {
                     setUser(res.data.user);
                 } else {
-                    navigate(-1);
+                    navigate(-1); // Retorna à página anterior se não estiver autenticado
                 }
             } catch {
                 navigate(-1);
@@ -61,7 +60,7 @@ function TeleMedicineRoom() {
         fetchUser();
     }, [navigate]);
 
-    // Validação de acesso à sala
+    /** Valida se o usuário tem permissão para acessar essa sala */
     useEffect(() => {
         if (!user) return;
         const validateAccess = async () => {
@@ -77,13 +76,27 @@ function TeleMedicineRoom() {
         validateAccess();
     }, [user, appointmentId]);
 
-    // Inicializa socket, chat e videochamada
+    /** Busca as mensagens anteriores salvas no backend */
+    const fetchPreviousMessages = async () => {
+        try {
+            const res = await axios.get(`${apiUrl}/messages/${appointmentId}`, { withCredentials: true });
+            setMessages(res.data.messages);
+        } catch (error) {
+            console.error("Erro ao buscar mensagens anteriores:", error);
+        }
+    };
+
+    /** Inicializa sockets, media e eventos da sala */
     useEffect(() => {
         if (!user || !authorizedUser) return;
 
+        // Conexão socket
         socketRef.current = io(apiUrl);
+
+        // Entra na sala
         socketRef.current.emit("join_room", { room: appointmentId, user: { name: user.name, id: user.id } });
 
+        // Eventos de socket
         socketRef.current.on("other_users", (users) => setOtherUsers(users));
         socketRef.current.on("receive_message", (data) => {
             setMessages((prev) => [...prev, data]);
@@ -96,24 +109,38 @@ function TeleMedicineRoom() {
             setMessages((prev) => [...prev, { system: true, text: `${data.user.name} saiu da sala.` }]);
         });
 
-        initializeMedia();
-
+        // WebRTC: recebendo oferta
         socketRef.current.on("offer", async ({ offer, sender }) => {
             await createPeer();
             await peerConnection.current.setRemoteDescription(offer);
             const answer = await peerConnection.current.createAnswer();
             await peerConnection.current.setLocalDescription(answer);
-            socketRef.current.emit("answer", { answer, room: appointmentId, sender });
+            socketRef.current.emit("answer", {
+                answer,
+                room: appointmentId,
+                sender: socketRef.current.id,
+                target: sender // responde diretamente para quem enviou a offer
+            });
         });
 
+
+        // WebRTC: recebendo resposta
         socketRef.current.on("answer", async ({ answer }) => {
             await peerConnection.current.setRemoteDescription(answer);
         });
 
+        // WebRTC: recebendo ICE
         socketRef.current.on("ice_candidate", async ({ candidate }) => {
             if (candidate) await peerConnection.current.addIceCandidate(candidate);
         });
 
+        // Inicializa vídeo local
+        initializeMedia();
+
+        // Busca mensagens anteriores
+        fetchPreviousMessages();
+
+        // Cleanup na desmontagem do componente
         return () => {
             socketRef.current.disconnect();
             if (localStream.current) localStream.current.getTracks().forEach(t => t.stop());
@@ -121,7 +148,7 @@ function TeleMedicineRoom() {
         };
     }, [user, appointmentId, authorizedUser]);
 
-    // Inicializa mídia local
+    /** Inicializa mídia local e estabelece chamada se houver outro usuário */
     const initializeMedia = async () => {
         try {
             localStream.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -138,7 +165,7 @@ function TeleMedicineRoom() {
         }
     };
 
-    // Cria conexão peer-to-peer
+    /** Cria conexão peer-to-peer (WebRTC) */
     const createPeer = async () => {
         if (peerConnection.current) return;
 
@@ -167,7 +194,7 @@ function TeleMedicineRoom() {
         };
     };
 
-    // Envia mensagem para o chat
+    /** Envia mensagem para o chat e salva no backend */
     const sendMessage = async (e) => {
         e.preventDefault();
         if (!message.trim()) return;
@@ -175,24 +202,28 @@ function TeleMedicineRoom() {
         const newMessage = { room: appointmentId, message, user: { name: user.name, id: user.id } };
 
         try {
+            // Envia pelo socket para sala
             socketRef.current.emit("send_message", newMessage);
+
+            // Persiste no backend
             await axios.post(`${apiUrl}/message`, {
                 appointmentId: appointmentId,
                 userId: user.id,
                 message
             }, { withCredentials: true });
+
             setMessage("");
         } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
         }
     };
 
-    // Scroll automático no chat
+    /** Mantém o scroll do chat sempre no final */
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // Controle de microfone
+    /** Ativa ou desativa o microfone */
     const toggleMute = () => {
         if (localStream.current) {
             localStream.current.getAudioTracks().forEach(track => (track.enabled = !track.enabled));
@@ -200,13 +231,17 @@ function TeleMedicineRoom() {
         }
     };
 
-    // Controle de câmera
+    /** Ativa ou desativa a câmera */
     const toggleCamera = () => {
         if (localStream.current) {
             localStream.current.getVideoTracks().forEach(track => (track.enabled = !track.enabled));
             setCameraOff(prev => !prev);
         }
     };
+
+    // ==============================
+    // Renderização Condicional
+    // ==============================
 
     if (loading) {
         return (
@@ -226,6 +261,10 @@ function TeleMedicineRoom() {
         );
     }
 
+    // ==============================
+    // Renderização da UI
+    // ==============================
+
     return (
         <main className="flex flex-col gap-2 min-h-screen bg-gray-100">
             <header className="mt-20 p-4 bg-indigo-700 text-white flex justify-between items-center shadow-md">
@@ -236,6 +275,7 @@ function TeleMedicineRoom() {
             </header>
 
             <section className="flex flex-col lg:flex-row flex-1 max-h-[80dvh]">
+                {/* Área de vídeo */}
                 <div className="relative flex-1 flex items-center justify-center">
                     <video ref={localVideoRef} autoPlay playsInline muted className="w-1/4 sm:w-1/5 rounded-lg shadow-lg border-4 border-white absolute top-4 left-4 z-10" />
                     <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-contain" />
@@ -250,6 +290,7 @@ function TeleMedicineRoom() {
                     </div>
                 </div>
 
+                {/* Área de chat */}
                 <aside className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l bg-white flex flex-col">
                     <div className="p-4 border-b flex items-center justify-between">
                         <h3 className="text-md font-semibold text-gray-700">Chat</h3>
