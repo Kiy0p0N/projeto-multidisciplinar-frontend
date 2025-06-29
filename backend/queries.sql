@@ -62,7 +62,6 @@ CREATE TABLE appointments (
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
     status VARCHAR(50) DEFAULT 'agendada', -- Ex.: agendada, concluída, cancelada
-    notes TEXT, -- Anotações opcionais sobre a consulta
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
